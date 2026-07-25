@@ -1,6 +1,6 @@
 # Hee-Lee Oss Downloads
 
-Everything you need to run good-deed work against [Hee-Lee Oss Projects](https://github.com/HeeLeeOss) using your own AI agent.
+Everything you need to run good-deed work against [Hee-Lee Oss projects](https://github.com/HeeLeeOss) using your own AI agent.
 
 > **Hee-Lee Oss turns spare AI capacity into open-source good deeds.** You bring your subscription. Hee-Lee Oss provides the tasks. Your agent does the work. The output ships to real beneficiaries.
 
