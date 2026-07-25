@@ -1,0 +1,18 @@
+{
+  "name": "hee-lee-oss",
+  "owner": {
+    "name": "Hee-Lee Oss",
+    "url": "https://github.com/Hee-Lee-Oss-Projects/hee-lee-oss-downloads"
+  },
+  "metadata": {
+    "description": "Hee-Lee Oss — turn spare AI capacity into open-source good deeds.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "hee-lee-oss",
+      "source": "./adapters/claude-code",
+      "description": "Run Hee-Lee Oss good-deed tasks inside Claude Code, on your subscription."
+    }
+  ]
+}

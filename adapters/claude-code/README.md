@@ -5,6 +5,7 @@ A Claude Code **plugin** that runs Hee-Lee Oss good-deed tasks inside your inter
 ## Install
 
 ```
+/plugin marketplace add Hee-Lee-Oss-Projects/hee-lee-oss-downloads
 /plugin install hee-lee-oss
 ```
 
