@@ -18,14 +18,17 @@ Everything you need to run good-deed work against [Hee-Lee Oss projects](https:/
 
 | Path | What it is |
 |---|---|
-| `scripts/hee-lee-oss-loop.ps1` | PowerShell loop — runs tasks one after another up to your limit (Windows / pwsh on macOS/Linux) |
-| `scripts/hee-lee-oss-loop.sh` | Bash loop — same behaviour on macOS / Linux |
+| `scripts/hee-lee-oss-loop.ps1` | Registry-driven PowerShell loop — runs tasks one after another up to your limit with any registered agent (`-Agent <id>`) |
+| `scripts/hee-lee-oss-loop.sh` | Same loop for macOS / Linux (`--agent <id>`) |
+| `scripts/README.md` | Full reference for the loop scripts: flags, registry-driven agent model, secrets/billing safety |
+| `adapters/registry.json` | Reference copy of the agent registry the loop scripts read (`argsTemplate`, model tiers, permission fragments, auth scrub vars) — the installed `hee-lee-oss` CLI ships its own copy; this one is for browsing/documentation |
 | `adapters/claude-code/` | Full Claude Code plugin — `/hee-lee-oss:start`, `/hee-lee-oss:next`, `/hee-lee-oss:status` |
-| `adapters/gemini-cli/` | Gemini CLI setup guide |
-| `adapters/cursor/` | Cursor setup guide |
-| `adapters/copilot/` | GitHub Copilot setup guide |
+| `adapters/gemini-cli/` | Gemini CLI extension + setup guide |
+| `adapters/codex/` | Codex CLI custom prompts + `AGENTS.md` snippet + installer |
+| `adapters/kimi/` | Kimi (Moonshot) Code CLI skills + `AGENTS.md` snippet + installer |
+| `adapters/cursor/` | Cursor Agent CLI setup guide (registry id: `cursor-agent`) |
+| `adapters/copilot/` | GitHub Copilot CLI setup guide |
 | `adapters/aider/` | Aider setup guide |
-| `adapters/codex/` | Codex CLI setup guide |
 | `docs/getting-started.md` | Step-by-step first-deed walkthrough |
 | `docs/looping.md` | How to loop through dozens of tasks in one session |
 
@@ -63,15 +66,19 @@ For Claude Code users, install the plugin and use `/hee-lee-oss:start` instead �
 
 **Windows (PowerShell):**
 ```powershell
-.\scripts\hee-lee-oss-loop.ps1 -Count 20 -ClaudeModel Auto
+.\scripts\hee-lee-oss-loop.ps1 -Count 20 -Agent claude-code
 ```
 
 **macOS / Linux (bash):**
 ```bash
-bash scripts/hee-lee-oss-loop.sh --count 20 --model auto
+bash scripts/hee-lee-oss-loop.sh --count 20 --agent claude-code
 ```
 
-The loop picks tasks, runs your agent on each one, submits the PR, and moves to the next — stopping when it hits your count or the session cap. See [`docs/looping.md`](docs/looping.md) for the full guide on running near your limits.
+Both default to `claude-code` if you omit `-Agent`/`--agent`. Swap in any id from
+`adapters/registry.json` — `gemini-cli`, `codex`, `aider`, `kimi`, `cursor-agent`, `copilot` — and
+the script resolves that agent's real command, model, and permission flags for you; no script
+edits needed. See [`scripts/README.md`](scripts/README.md) for the full registry-driven flag
+reference and [`docs/looping.md`](docs/looping.md) for the guide on running near your limits.
 
 <p align="center"><img src="https://raw.githubusercontent.com/HeeLeeOss/.github/main/assets/divider.svg" width="100%" height="6" alt=""/></p>
 
@@ -83,20 +90,26 @@ The loop and adapters in this repo use the **donated compute lane**: your own AI
   <img src="https://raw.githubusercontent.com/HeeLeeOss/.github/main/assets/credits-meter-good.svg" alt="Usage credits: 99% used. Put the capacity to work, for good." width="100%" />
 </p>
 
-**Critical rule:** do not set `ANTHROPIC_API_KEY` when running the loop or Claude Code adapter — that would bill the pay-as-you-go API instead of your subscription. The scripts check for this and refuse to continue if the key is set.
+**Critical rule:** do not set the API key env var for whichever agent you're running (e.g.
+`ANTHROPIC_API_KEY` for Claude Code, `OPENAI_API_KEY` for Codex, `GEMINI_API_KEY`/`GOOGLE_API_KEY`
+for Gemini CLI, `MOONSHOT_API_KEY` for Kimi) — that would bill the pay-as-you-go API instead of
+your subscription. The loop scripts scrub every registry-declared provider key
+(`adapters/registry.json`'s `auth.scrubEnv` per agent) for the duration of each agent call and
+restore it immediately after, and only ever print a non-secret notice that a scrub happened.
 
 <p align="center"><img src="https://raw.githubusercontent.com/HeeLeeOss/.github/main/assets/divider.svg" width="100%" height="6" alt=""/></p>
 
 ## 🟡 Pick your agent
 
-| Agent | Setup |
-|---|---|
-| Claude Code | [`adapters/claude-code/`](adapters/claude-code/) — plugin with guided skills |
-| Gemini CLI | [`adapters/gemini-cli/`](adapters/gemini-cli/) |
-| Cursor | [`adapters/cursor/`](adapters/cursor/) |
-| GitHub Copilot | [`adapters/copilot/`](adapters/copilot/) |
-| Aider | [`adapters/aider/`](adapters/aider/) |
-| Codex CLI | [`adapters/codex/`](adapters/codex/) |
+| Agent | Registry id | Setup |
+|---|---|---|
+| Claude Code | `claude-code` | [`adapters/claude-code/`](adapters/claude-code/) — plugin with guided skills |
+| Gemini CLI | `gemini-cli` | [`adapters/gemini-cli/`](adapters/gemini-cli/) — extension with guided commands |
+| Codex CLI | `codex` | [`adapters/codex/`](adapters/codex/) — custom prompts + `AGENTS.md` snippet |
+| Kimi (Moonshot) | `kimi` | [`adapters/kimi/`](adapters/kimi/) — skills + `AGENTS.md` snippet |
+| Cursor Agent CLI | `cursor-agent` | [`adapters/cursor/`](adapters/cursor/) |
+| GitHub Copilot CLI | `copilot` | [`adapters/copilot/`](adapters/copilot/) |
+| Aider | `aider` | [`adapters/aider/`](adapters/aider/) |
 
 <p align="center"><img src="https://raw.githubusercontent.com/HeeLeeOss/.github/main/assets/divider.svg" width="100%" height="6" alt=""/></p>
 

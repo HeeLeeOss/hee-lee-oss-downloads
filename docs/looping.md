@@ -2,7 +2,7 @@
 
 The Hee-Lee Oss loop scripts (`hee-lee-oss-loop.ps1` / `hee-lee-oss-loop.sh`) are designed to let you run many good-deed tasks end-to-end in a single session, automatically, without manually managing each one.
 
-This guide explains how to get the most out of a session without blowing past your API limits.
+This guide explains how to get the most out of a session without blowing past your limits.
 
 ---
 
@@ -11,9 +11,9 @@ This guide explains how to get the most out of a session without blowing past yo
 Each iteration does four things:
 
 1. **`hee-lee-oss next`** — picks the next eligible task and prepares a workspace (`~/Hee-Lee Oss/queue/<task-id>/`) with `TASK.md`, `CONTEXT.md`, and a claim file
-2. **`claude -p`** (or your chosen agent) — runs in the workspace and produces the deliverable
-3. **`hee-lee-oss submit`** — commits the output, pushes from your fork, opens the PR, and writes a deed receipt
-4. **Workspace cleanup** — deletes the workspace (freeing the session-cap slot) and moves to the next task
+2. **`hee-lee-oss dispatch --workspace <ws> --agent <id>`** — resolves, from `adapters/registry.json`, everything needed to run that task with your chosen agent: the concrete model for the task's capability tier, the acceptance verdict (can this agent's output auto-merge, or does it need a human?), and a ready-to-run invocation (command, args, supervised permission flags, and whether the prompt goes over stdin or as an argument)
+3. **The resolved agent invocation runs** in the workspace and produces the deliverable — the script never hardcodes a vendor binary; whichever agent id you passed via `-Agent`/`--agent` is what actually runs
+4. **`hee-lee-oss submit`** — commits the output, pushes from your fork, opens the PR, and writes a deed receipt, then the workspace is deleted (freeing the session-cap slot) and the loop moves to the next task
 
 Each task is a fresh agent invocation. Context is reset between tasks, so you never hit the per-conversation limit regardless of how many deeds you run.
 
@@ -23,7 +23,7 @@ Each task is a fresh agent invocation. Context is reset between tasks, so you ne
 
 ### Subscription context window (the main limit)
 
-Each `claude -p` call gets its own context window. Most Hee-Lee Oss tasks are scoped to fit comfortably within a single invocation. The loop handles the reset automatically — when one task finishes, the next starts with a clean slate.
+Each dispatched agent call gets its own context window. Most Hee-Lee Oss tasks are scoped to fit comfortably within a single invocation. The loop handles the reset automatically — when one task finishes, the next starts with a clean slate.
 
 **You do not need to worry about hitting conversation limits.** The loop design prevents it.
 
@@ -45,11 +45,11 @@ The session cap is a safety rail, not a limit imposed by your subscription. It e
 
 ### Rate limits
 
-If you are running many fast tasks (small content tasks on Haiku), you may hit Claude's rate limits. Signs: the agent starts returning errors or truncated output. Solutions:
+If you are running many fast tasks (small content tasks resolved to a light-tier model), you may hit your agent's rate limits. Signs: the agent starts returning errors or truncated output. Solutions:
 
-- Use `--model sonnet` instead of `haiku` (fewer requests per task)
-- Reduce `--count` and run multiple shorter sessions
+- Reduce `-Count`/`--count` and run multiple shorter sessions
 - Add a brief manual pause between sessions
+- Switch `-Agent`/`--agent` to a different registry id to spread load across providers/accounts
 
 ---
 
@@ -57,7 +57,7 @@ If you are running many fast tasks (small content tasks on Haiku), you may hit C
 
 | Session goal | Recommended count |
 |---|---|
-| First try / test setup | `3` with `--dry-run` |
+| First try / test setup | `3` with `-DryRun`/`--dry-run` |
 | A quick afternoon session | `5–10` |
 | An unattended evening run | `20–50` |
 | Maximize a full subscription cycle | `100+` (raise `maxTasksPerSession` first) |
@@ -66,40 +66,47 @@ The loop stops cleanly when it runs out of tasks, so setting a high count is saf
 
 ---
 
-## Auto model selection (recommended)
+## Model selection is automatic
 
-Pass `--model auto` (`-ClaudeModel Auto` on PowerShell) to let Hee-Lee Oss pick the right model tier per task:
+There is no `--model`/`-Model` flag. Every dispatch resolves the concrete model for the task's
+capability tier straight from `adapters/registry.json`'s `tierModels` for your chosen agent
+(`frontier` / `standard` / `light`), based on the task's `riskTier` and `tokenEstimate`:
 
-| Task characteristics | Model chosen | Why |
+| Task characteristics | Tier chosen | Why |
 |---|---|---|
-| `riskTier: high` OR `tokenEstimate: large` | **opus** | High-stakes or complex tasks need the most capable model |
-| `riskTier: medium` OR `tokenEstimate: medium` | **sonnet** | Balanced quality and speed |
-| `riskTier: low` AND `tokenEstimate: small` | **haiku** | Fast, cheap, fine for simple content tasks |
+| `riskTier: high` OR `tokenEstimate: large` | **frontier** | High-stakes or complex tasks need the most capable model |
+| `riskTier: medium` OR `tokenEstimate: medium` | **standard** | Balanced quality and speed |
+| `riskTier: low` AND `tokenEstimate: small` | **light** | Fast, cheap, fine for simple content tasks |
 
-This means a session with 50 tasks might use Haiku for 30 of them, Sonnet for 15, and Opus for 5 — dramatically extending how much you can do on a fixed subscription.
+This means a session with 50 tasks might resolve the light-tier model for 30 of them, standard for
+15, and frontier for 5 — dramatically extending how much you can do on a fixed subscription. You
+never pick the model by hand; you only pick the agent:
 
 ```powershell
 # PowerShell
-.\hee-lee-oss-loop.ps1 -Count 50 -ClaudeModel Auto
+.\hee-lee-oss-loop.ps1 -Count 50 -Agent claude-code
+```
 
+```bash
 # bash
-bash hee-lee-oss-loop.sh --count 50 --model auto
+bash hee-lee-oss-loop.sh --count 50 --agent claude-code
 ```
 
 ---
 
-## Permission modes
+## Permissions
 
-| Mode | What it does | Best for |
-|---|---|---|
-| `acceptEdits` (default) | Auto-approves file writes; prompts for shell commands | Most content and documentation tasks |
-| `skip` | Fully unattended (`--dangerously-skip-permissions`) | Trusted content tasks where you want zero interruptions |
+There is no `-PermissionMode`/`--permission-mode` flag, and the loop never escalates to an
+unattended/auto-approve mode. Every dispatch resolves the **supervised** (ask-before-edit)
+permission fragment for the chosen agent straight from `adapters/registry.json`'s
+`invocation.permissions.supervised` — e.g. Claude Code's `--permission-mode acceptEdits`, Codex's
+`--sandbox workspace-write --ask-for-approval on-request`. This is deliberate: the loop scripts are
+the minimal, public, registry-driven pull → build → PR loop, and they are not the place to opt into
+`unattended` (auto-approve-everything) permission fragments. If you need that, work from the main
+Hee-Lee Oss repo's fuller `ignite` pipeline directly.
 
-For `skip` mode: review a few tasks first with `--dry-run` to confirm the task types are appropriate before going fully unattended.
-
-```powershell
-.\hee-lee-oss-loop.ps1 -Count 20 -ClaudeModel Auto -PermissionMode skip
-```
+Review a few tasks first with `-DryRun`/`--dry-run` to confirm the task types are appropriate
+before running a long session.
 
 ---
 
@@ -107,19 +114,28 @@ For `skip` mode: review a few tasks first with `--dry-run` to confirm the task t
 
 ```powershell
 # PowerShell — run 30 deeds on the open coding curriculum
-.\hee-lee-oss-loop.ps1 -Repo Hee-Lee-Oss-Projects/open-coding-curriculum -Count 30 -ClaudeModel Auto
-
-# bash
-bash hee-lee-oss-loop.sh --repo Hee-Lee-Oss-Projects/open-coding-curriculum --count 30 --model auto
+.\hee-lee-oss-loop.ps1 -Project open-coding-curriculum -Count 30 -Agent claude-code
 ```
 
-Omit `--repo` to let Hee-Lee Oss auto-pick the highest-priority task across all projects.
+```bash
+# bash
+bash hee-lee-oss-loop.sh --project open-coding-curriculum --count 30 --agent claude-code
+```
+
+`-Project`/`--project` pins to one project slug (resolved to `Hee-Lee-Oss-Projects/<slug>`)
+instead of auto-rotating across the registry. Omit it to let Hee-Lee Oss auto-pick the
+highest-priority task across all projects.
+
+You can also pick a task lane with `-Lane`/`--lane` (default `donated`), and pass
+`-NoFork`/`--no-fork` to clone the target repo directly instead of forking (only if you have push
+access).
 
 ---
 
 ## Safe testing before a long run
 
-Always test with `--dry-run` first. It prepares each workspace but skips the agent and submit:
+Always test with `-DryRun`/`--dry-run` first. It shows the resolved plan (agent, model, acceptance
+verdict) for each task without actually building or submitting anything:
 
 ```powershell
 .\hee-lee-oss-loop.ps1 -Count 3 -DryRun
@@ -129,14 +145,21 @@ Check that `~/Hee-Lee Oss/queue/` contains the workspaces and that `TASK.md` loo
 
 ---
 
-## If the loop stops early
+## If the loop stops early or holds a task
 
 | Message | Cause | Fix |
 |---|---|---|
 | `Session cap reached` | `maxTasksPerSession` hit | Raise the cap in `~/Hee-Lee Oss/config.yaml` |
-| `No more eligible tasks` | Queue empty for this project/lane | Try without `--repo` to pick from the full registry |
-| `No PR reported for <task-id>` | Agent produced no changes | Inspect workspace; the deliverable may need manual review |
-| `ANTHROPIC_API_KEY is set` | API key detected | Unset it: `$env:ANTHROPIC_API_KEY = $null` (PowerShell) or `unset ANTHROPIC_API_KEY` (bash) |
+| `No more eligible tasks` | Queue empty for this project/lane | Try without `-Project`/`--project` to pick from the full registry |
+| `held: <task> - agent '<id>' is unusable for this deliverable` | The dispatch acceptance verdict for this agent/task pair is `unusable` | Switch `-Agent`/`--agent`, or handle that task manually with a stronger agent |
+| `held: <task> - agent '<id>' kind '<kind>' is not a CLI this loop can drive` | The chosen agent isn't a `kind: "cli"` registry entry | Pick a different `-Agent`/`--agent` id — this loop only drives CLI agents |
+| `no changes for <task-id> - releasing workspace` | The agent produced no diff, or the task was already done | Inspect the workspace before it's cleaned up (or re-run with `-DryRun` first); may need manual review |
+
+The loop scrubs every registry-declared provider key (`auth.scrubEnv` per agent, e.g.
+`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`/`GOOGLE_API_KEY`, `MOONSHOT_API_KEY`) for
+the duration of each agent call and restores it immediately after — you'll see a one-line,
+non-secret notice (`loop: scrubbed <VAR> from the environment for this call ...`) when that
+happens; it is not an error and does not stop the loop.
 
 ---
 
@@ -155,19 +178,19 @@ Shows active claims, completed deeds, and the URLs of PRs you've opened. Each de
 ## Full example: maximize an evening session
 
 ```powershell
-# PowerShell — 100 deeds, auto model, no prompts, raise the cap first
+# PowerShell — 100 deeds, raise the cap first
 # 1. Raise the session cap
 (Get-Content ~/Hee-Lee Oss/config.yaml) -replace 'maxTasksPerSession: \d+', 'maxTasksPerSession: 200' |
   Set-Content ~/Hee-Lee Oss/config.yaml
 
 # 2. Run
-.\hee-lee-oss-loop.ps1 -Count 100 -ClaudeModel Auto -PermissionMode skip
+.\hee-lee-oss-loop.ps1 -Count 100 -Agent claude-code
 ```
 
 ```bash
 # bash — same thing
 sed -i 's/maxTasksPerSession: [0-9]*/maxTasksPerSession: 200/' ~/Hee-Lee Oss/config.yaml
-bash hee-lee-oss-loop.sh --count 100 --model auto --permission-mode skip
+bash hee-lee-oss-loop.sh --count 100 --agent claude-code
 ```
 
 Leave it running. Come back to a list of PRs.

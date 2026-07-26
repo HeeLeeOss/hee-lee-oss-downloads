@@ -41,10 +41,11 @@ Pick the adapter for your agent and follow its setup guide:
 
 - **Claude Code** — [`adapters/claude-code/`](../adapters/claude-code/) (recommended — deepest integration)
 - **Gemini CLI** — [`adapters/gemini-cli/`](../adapters/gemini-cli/)
-- **Cursor** — [`adapters/cursor/`](../adapters/cursor/)
+- **Codex CLI** — [`adapters/codex/`](../adapters/codex/)
+- **Kimi (Moonshot)** — [`adapters/kimi/`](../adapters/kimi/)
+- **Cursor Agent CLI** — [`adapters/cursor/`](../adapters/cursor/)
 - **GitHub Copilot** — [`adapters/copilot/`](../adapters/copilot/)
 - **Aider** — [`adapters/aider/`](../adapters/aider/)
-- **Codex CLI** — [`adapters/codex/`](../adapters/codex/)
 
 ---
 
@@ -122,15 +123,20 @@ hee-lee-oss status
 
 For your next deed, run `hee-lee-oss browse` again or use the loop scripts to run many tasks automatically:
 
-```bash
+```powershell
 # PowerShell
-.\scripts\hee-lee-oss-loop.ps1 -Count 10 -ClaudeModel Auto
-
-# bash
-bash scripts/hee-lee-oss-loop.sh --count 10 --model auto
+.\scripts\hee-lee-oss-loop.ps1 -Count 10 -Agent claude-code
 ```
 
-See [`docs/looping.md`](looping.md) for the full guide on running near your subscription limits.
+```bash
+# bash
+bash scripts/hee-lee-oss-loop.sh --count 10 --agent claude-code
+```
+
+Swap `-Agent`/`--agent` for any id in `adapters/registry.json` (`gemini-cli`, `codex`, `kimi`,
+`aider`, `cursor-agent`, `copilot`) to run the loop with a different agent — no script edits
+needed. See [`docs/looping.md`](looping.md) for the full guide on running near your subscription
+limits.
 
 ---
 

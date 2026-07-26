@@ -1,0 +1,236 @@
+{
+  "version": "1",
+  "agents": [
+    {
+      "id": "claude-code",
+      "kind": "cli",
+      "vendor": "anthropic",
+      "capabilities": {
+        "editsFiles": true,
+        "research": true,
+        "translation": true,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": true,
+      "tierModels": {
+        "frontier": "opus",
+        "standard": "sonnet",
+        "light": "haiku"
+      },
+      "invocation": {
+        "command": "claude",
+        "argsTemplate": ["-p", "{permissions}", "--model", "{model}"],
+        "promptChannel": "stdin",
+        "permissions": {
+          "supervised": ["--permission-mode", "acceptEdits"],
+          "unattended": ["--dangerously-skip-permissions"]
+        }
+      },
+      "auth": {
+        "keyEnv": "ANTHROPIC_API_KEY",
+        "scrubEnv": ["ANTHROPIC_API_KEY"]
+      }
+    },
+    {
+      "id": "aider",
+      "kind": "cli",
+      "capabilities": {
+        "editsFiles": true,
+        "research": false,
+        "translation": true,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": true,
+      "tierModels": {
+        "frontier": "anthropic/claude-opus-4-8",
+        "standard": "anthropic/claude-sonnet-4-5",
+        "light": "anthropic/claude-haiku-4-5"
+      },
+      "invocation": {
+        "command": "aider",
+        "argsTemplate": ["--model", "{model}", "{permissions}", "--no-auto-commits", "--message"],
+        "promptChannel": "arg",
+        "permissions": {
+          "supervised": ["--yes"],
+          "unattended": ["--yes-always"]
+        }
+      },
+      "auth": {
+        "scrubEnv": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY"]
+      }
+    },
+    {
+      "id": "codex",
+      "kind": "cli",
+      "vendor": "openai",
+      "capabilities": {
+        "editsFiles": true,
+        "research": true,
+        "translation": false,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": true,
+      "tierModels": {
+        "frontier": "gpt-5-codex",
+        "standard": "gpt-5-codex",
+        "light": "gpt-5-codex-mini"
+      },
+      "invocation": {
+        "command": "codex",
+        "argsTemplate": ["exec", "--model", "{model}", "{permissions}"],
+        "promptChannel": "arg",
+        "permissions": {
+          "supervised": ["--sandbox", "workspace-write", "--ask-for-approval", "on-request"],
+          "unattended": ["--full-auto"]
+        }
+      },
+      "auth": {
+        "keyEnv": "OPENAI_API_KEY",
+        "scrubEnv": ["OPENAI_API_KEY"]
+      }
+    },
+    {
+      "id": "gemini-cli",
+      "kind": "cli",
+      "vendor": "google",
+      "capabilities": {
+        "editsFiles": true,
+        "research": true,
+        "translation": true,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": true,
+      "tierModels": {
+        "frontier": "gemini-2.5-pro",
+        "standard": "gemini-2.5-pro",
+        "light": "gemini-2.5-flash"
+      },
+      "invocation": {
+        "command": "gemini",
+        "argsTemplate": ["-m", "{model}", "{permissions}", "-p"],
+        "promptChannel": "arg",
+        "permissions": {
+          "supervised": ["--approval-mode", "auto_edit"],
+          "unattended": ["--approval-mode", "yolo"]
+        }
+      },
+      "auth": {
+        "keyEnv": "GEMINI_API_KEY",
+        "scrubEnv": ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
+      }
+    },
+    {
+      "id": "cursor-agent",
+      "kind": "cli",
+      "capabilities": {
+        "editsFiles": true,
+        "research": true,
+        "translation": false,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": true,
+      "tierModels": {
+        "frontier": "sonnet",
+        "standard": "sonnet",
+        "light": "sonnet"
+      },
+      "invocation": {
+        "command": "cursor-agent",
+        "argsTemplate": ["-p", "--model", "{model}", "{permissions}"],
+        "promptChannel": "arg",
+        "permissions": {
+          "unattended": ["--force"]
+        }
+      },
+      "auth": {
+        "scrubEnv": []
+      }
+    },
+    {
+      "id": "kimi",
+      "kind": "cli",
+      "vendor": "moonshot",
+      "capabilities": {
+        "editsFiles": true,
+        "research": true,
+        "translation": true,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": false,
+      "tierModels": {
+        "frontier": "kimi-k3",
+        "standard": "kimi-k2.7-code",
+        "light": "kimi-k2.7-code-highspeed"
+      },
+      "invocation": {
+        "command": "kimi",
+        "argsTemplate": ["--print", "--model", "{model}", "{permissions}"],
+        "promptChannel": "stdin",
+        "permissions": {
+          "unattended": ["--afk"]
+        }
+      },
+      "auth": {
+        "keyEnv": "MOONSHOT_API_KEY",
+        "scrubEnv": ["MOONSHOT_API_KEY"]
+      }
+    },
+    {
+      "id": "anthropic-api",
+      "kind": "api",
+      "vendor": "anthropic",
+      "capabilities": {
+        "editsFiles": false,
+        "research": true,
+        "translation": true,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": false,
+      "goodFor": ["document", "translation", "dataset"],
+      "tierModels": {
+        "frontier": "claude-opus-4-8",
+        "standard": "claude-sonnet-4-5",
+        "light": "claude-haiku-4-5"
+      },
+      "auth": {
+        "keyEnv": "ANTHROPIC_API_KEY",
+        "scrubEnv": []
+      }
+    },
+    {
+      "id": "copilot",
+      "kind": "cli",
+      "capabilities": {
+        "editsFiles": true,
+        "research": true,
+        "translation": false,
+        "writing": true,
+        "headless": true
+      },
+      "trusted": false,
+      "tierModels": {
+        "frontier": "claude-sonnet-4.5",
+        "standard": "claude-sonnet-4.5",
+        "light": "claude-sonnet-4.5"
+      },
+      "invocation": {
+        "command": "copilot",
+        "argsTemplate": ["--model", "{model}", "{permissions}", "-p"],
+        "promptChannel": "arg",
+        "permissions": {
+          "unattended": ["--allow-all-tools", "--no-ask-user"]
+        }
+      },
+      "auth": {
+        "scrubEnv": []
+      }
+    }
+  ]
+}

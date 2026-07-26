@@ -1,0 +1,24 @@
+description = "Do the next Hee-Lee Oss good-deed task in this interactive session."
+
+prompt = """
+Continue an Hee-Lee Oss session with the next task, in THIS interactive Gemini CLI session, on
+my own account. Same rules as `/hee-lee-oss:start` — see this extension's GEMINI.md.
+
+Arguments (optional): {{args}}
+
+Steps:
+
+1. Pre-flight: refuse if `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set (must stay on my own
+   account, never the metered API).
+2. Check the budget guard: run `hee-lee-oss status`. If active claims have reached the configured
+   `maxTasksPerSession`, stop and tell me the session cap is reached.
+3. Pick the next task (`hee-lee-oss browse`, or the next one from the arguments above).
+4. `hee-lee-oss pull --task-file <path> --dry-run`, then `hee-lee-oss pull --task-file <path>`.
+5. Do the work in the workspace, honoring the refusal guardrails in `CONTEXT.md` and in this
+   extension's GEMINI.md.
+6. `hee-lee-oss submit <task-id> --repo <owner>/<repo> --agent gemini-cli`; share the PR URL.
+7. Offer another task, or stop gracefully.
+
+This is for looping through tasks while I'm present. It is interactive — never headless, never
+with an API key set.
+"""

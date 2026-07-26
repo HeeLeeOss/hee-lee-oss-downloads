@@ -1,0 +1,6 @@
+{
+  "name": "hee-lee-oss",
+  "version": "0.1.0",
+  "description": "Run Hee-Lee Oss good-deed tasks inside Gemini CLI, interactively on your own account.",
+  "contextFileName": "GEMINI.md"
+}

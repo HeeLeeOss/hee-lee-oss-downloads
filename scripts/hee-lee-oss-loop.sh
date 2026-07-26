@@ -1,191 +1,218 @@
 #!/usr/bin/env bash
-# hee-lee-oss-loop.sh — loop through Hee-Lee Oss good-deed tasks using your own AI agent (donated-compute lane)
+#
+# Hee-Lee Oss donated-lane loop: pull the next good-deed task, build it with any registry agent,
+# and open a PR. A thin wrapper over the installed `hee-lee-oss` CLI -- it never hardcodes a
+# vendor binary. --agent <registry-id> selects ANY agent listed in adapters/registry.json
+# (claude-code, aider, codex, gemini-cli, cursor-agent, ...); the CLI's `dispatch` command
+# resolves that agent's real command, model, and permission flags for you. See the
+# "Registry-driven agents" section in README.md next to this script for how to add or pick an
+# agent.
+#
+# This script never authenticates or installs a coding agent for you -- that's on you, same as
+# running it yourself. It only shells out to whatever agent CLI the registry says to run, on your
+# own subscription/account (the donated compute lane). Every dispatch resolves the supervised
+# (ask-before-edit) permission fragment for the chosen agent -- this loop never escalates to an
+# unattended/auto-approve mode.
 #
 # Usage:
-#   bash hee-lee-oss-loop.sh [options]
-#
-# Options:
-#   --count N          Number of deeds to attempt (default: 5)
-#   --repo OWNER/NAME  Target project repo (omit to auto-pick from registry)
-#   --model MODEL      Model for claude -p: sonnet, opus, haiku, or "auto" (recommended)
-#                      "auto" picks per task: large/high-risk=opus, medium=sonnet, small=haiku
-#   --agent NAME       Agent name in receipt (default: claude-code)
-#   --lane LANE        donated (default) or funded
-#   --permission-mode  acceptEdits (default) or skip (fully unattended)
-#   --no-fork          Push directly to project repo (only if you have write access)
-#   --keep-workspaces  Keep workspaces after submit (default: delete on success)
-#   --dry-run          Prepare workspaces only; skip agent and submit
-#   --work-dir DIR     Root workspace directory (default: ~/Hee-Lee Oss)
-#   --help             Show this help
-#
-# Prerequisites:
-#   npm install -g @hee-lee-oss/cli
-#   hee-lee-oss init && hee-lee-oss doctor
-#   gh auth login
+#   ./hee-lee-oss-loop.sh [--count N] [--agent <registry-id>] [--project <slug>] [--lane donated]
+#                         [--no-fork] [--dry-run]
 #
 # Examples:
-#   bash hee-lee-oss-loop.sh --count 10 --model auto
-#   bash hee-lee-oss-loop.sh --repo Hee-Lee-Oss-Projects/open-coding-curriculum --count 20 --model sonnet
-#   bash hee-lee-oss-loop.sh --count 3 --dry-run
-#   bash hee-lee-oss-loop.sh --count 50 --model auto --permission-mode skip
+#   ./hee-lee-oss-loop.sh --count 5
+#   ./hee-lee-oss-loop.sh --count 5 --agent gemini-cli
+#   ./hee-lee-oss-loop.sh --count 5 --agent codex --project tool-atlas
+#
+# Requires: node (for the JSON parsing helper below) and the hee-lee-oss CLI on PATH, or a local
+# checkout's node_modules/.bin/hee-lee-oss next to this script.
 
-set -euo pipefail
+set -u
 
-# Defaults
-COUNT=5
-REPO=""
-MODEL=""
+COUNT=10
 AGENT="claude-code"
+PROJECT=""
 LANE="donated"
-PERMISSION_MODE="acceptEdits"
-NO_FORK=false
-KEEP_WORKSPACES=false
-DRY_RUN=false
-WORK_DIR="${HOME}/Hee-Lee Oss"
-PROMPT="Read .hee-lee-oss/TASK.md and .hee-lee-oss/CONTEXT.md, then produce the deliverable at the task's output path. Meet every acceptance criterion. Honor the refusal guardrails in CONTEXT.md — if the task would cause harm, mislead, give unqualified high-stakes advice without required review, primarily benefit a for-profit, or violate a license or privacy, STOP and write nothing."
+NO_FORK=0
+DRY_RUN=0
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
   case "$1" in
-    --count)           COUNT="$2";           shift 2 ;;
-    --repo)            REPO="$2";            shift 2 ;;
-    --model)           MODEL="$2";           shift 2 ;;
-    --agent)           AGENT="$2";           shift 2 ;;
-    --lane)            LANE="$2";            shift 2 ;;
-    --permission-mode) PERMISSION_MODE="$2"; shift 2 ;;
-    --no-fork)         NO_FORK=true;         shift ;;
-    --keep-workspaces) KEEP_WORKSPACES=true; shift ;;
-    --dry-run)         DRY_RUN=true;         shift ;;
-    --work-dir)        WORK_DIR="$2";        shift 2 ;;
-    --help|-h)
-      sed -n '3,40p' "$0" | sed 's/^# \?//'
-      exit 0 ;;
-    *) echo "Unknown option: $1" >&2; exit 1 ;;
+    --count) COUNT="$2"; shift 2 ;;
+    --agent) AGENT="$2"; shift 2 ;;
+    --project) PROJECT="$2"; shift 2 ;;
+    --lane) LANE="$2"; shift 2 ;;
+    --no-fork) NO_FORK=1; shift ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "unknown option: $1" >&2; exit 1 ;;
   esac
 done
 
-# --- Safety: donated lane must not use ANTHROPIC_API_KEY ---
-if [[ "$LANE" == "donated" ]] && [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
-  echo "ERROR: ANTHROPIC_API_KEY is set." >&2
-  echo "The donated lane runs on your Claude subscription, not the API." >&2
-  echo "Unset it first:  unset ANTHROPIC_API_KEY" >&2
-  echo "Or re-run with: --lane funded" >&2
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+HLO=""
+if command -v hee-lee-oss >/dev/null 2>&1; then
+  HLO="hee-lee-oss"
+elif [ -x "$SCRIPT_DIR/node_modules/.bin/hee-lee-oss" ]; then
+  HLO="$SCRIPT_DIR/node_modules/.bin/hee-lee-oss"
+else
+  echo "hee-lee-oss CLI not found on PATH or at $SCRIPT_DIR/node_modules/.bin/hee-lee-oss." >&2
+  echo "Install it first: npm install -g @hee-lee-oss/cli (see README.md)." >&2
   exit 1
 fi
 
-# --- Check prerequisites ---
-if ! command -v hee-lee-oss &>/dev/null; then
-  echo "ERROR: hee-lee-oss not found. Install with: npm install -g @hee-lee-oss/cli" >&2
-  exit 1
-fi
-if ! command -v claude &>/dev/null; then
-  echo "ERROR: claude not found. Install Claude Code: https://claude.ai/code" >&2
-  exit 1
-fi
+BUILD_PROMPT='Read .hee-lee-oss/TASK.md and .hee-lee-oss/CONTEXT.md, then produce the deliverable at the task output path. Work through EVERY acceptance criterion explicitly and satisfy each one - do not stop until all are met. Honor the refusal guardrails in CONTEXT.md - if the task would cause harm, mislead, give unqualified high-stakes advice without review, primarily benefit a for-profit, or violate a license or privacy, STOP and write nothing.'
 
-# --- Auto model: read task.json to pick the right model tier ---
-get_auto_model() {
-  local ws="$1"
-  local task_file="$ws/.hee-lee-oss/task.json"
-  local effort="medium" risk="medium"
-  if [[ -f "$task_file" ]]; then
-    effort=$(python3 -c "import json,sys; d=json.load(open('$task_file')); print(d.get('tokenEstimate','medium'))" 2>/dev/null || echo "medium")
-    risk=$(python3   -c "import json,sys; d=json.load(open('$task_file')); print(d.get('riskTier','medium'))"    2>/dev/null || echo "medium")
-  fi
-  if [[ "$risk" == "high"   || "$effort" == "large"  ]]; then echo "opus";   return; fi
-  if [[ "$risk" == "medium" || "$effort" == "medium" ]]; then echo "sonnet"; return; fi
-  echo "haiku"
+# --- JSON field readers: a single small node helper, since jq is not a universal prerequisite but
+#     node already is (the CLI itself is a node binary). Never prints the whole payload -- only the
+#     requested field -- so nothing sensitive gets echoed by accident.
+json_get() {
+  # $1 = json string, $2 = dotted path (e.g. "invocation.command" or "auth.scrubEnv" for an array
+  # joined with newlines)
+  node -e '
+    let raw = "";
+    process.stdin.on("data", d => raw += d);
+    process.stdin.on("end", () => {
+      let v;
+      try { v = JSON.parse(raw); } catch { process.exit(0); }
+      const path = process.argv[1].split(".");
+      for (const k of path) { if (v == null) break; v = v[k]; }
+      if (Array.isArray(v)) { for (const x of v) process.stdout.write(String(x) + "\n"); }
+      else if (v !== undefined && v !== null) { process.stdout.write(String(v) + "\n"); }
+    });
+  ' "$2" <<<"$1"
 }
 
-# --- Build hee-lee-oss next args ---
-NEXT_ARGS=("next" "--lane" "$LANE")
-[[ -n "$REPO" ]]   && NEXT_ARGS+=("--repo" "$REPO")
-[[ "$NO_FORK" == true ]] && NEXT_ARGS+=("--no-fork")
+# --- Generic agent runner: works for ANY registry entry, never hardcodes a vendor binary. The
+#     dispatch plan (from `hee-lee-oss dispatch`) carries the resolved command/args/promptChannel
+#     plus auth.scrubEnv -- the env vars that must be unset so the call bills to this agent's own
+#     subscription/account rather than silently picking up a stray API key. This mirrors (in
+#     simplified form) Invoke-Agent in scripts/ignite/HeeLeeOssIgnite.psm1 in the main repo.
+invoke_registry_agent() {
+  local dispatch_json="$1" prompt="$2" workdir="$3"
+  local command promptchannel key_env
+  command="$(json_get "$dispatch_json" invocation.command)"
+  promptchannel="$(json_get "$dispatch_json" invocation.promptChannel)"
+  key_env="$(json_get "$dispatch_json" auth.keyEnv)"
+  if [ -z "$command" ]; then
+    echo "agent has no CLI invocation" >&2
+    return 1
+  fi
+  local args=()
+  while IFS= read -r a; do [ -n "$a" ] && args+=("$a"); done < <(json_get "$dispatch_json" invocation.args)
 
-DONE=0
-PR_URLS=()
+  local scrub_vars=()
+  while IFS= read -r e; do [ -n "$e" ] && scrub_vars+=("$e"); done < <(json_get "$dispatch_json" auth.scrubEnv)
 
-echo ""
-echo "Hee-Lee Oss loop starting — up to $COUNT deed(s), lane: $LANE"
-[[ "$DRY_RUN" == true ]] && echo "[DRY RUN — agent and submit steps will be skipped]"
-echo ""
+  # Save + unset scrubbed vars; restore unconditionally on return via a trap-free explicit block.
+  local -A saved=() had=()
+  for e in "${scrub_vars[@]}"; do
+    if [ -n "${!e+x}" ]; then
+      had[$e]=1
+      saved[$e]="${!e}"
+      unset "$e"
+    fi
+  done
+  if [ -n "$key_env" ] && [ -n "${had[$key_env]+x}" ]; then
+    echo "loop: scrubbed $key_env from the environment for this call (agent stays on your subscription, not billed to API)" >&2
+  fi
 
-for ((i=1; i<=COUNT; i++)); do
-  echo "=== deed $i / $COUNT ==="
-
-  # Pick and prepare the next task
-  NEXT_OUT=$(hee-lee-oss "${NEXT_ARGS[@]}" 2>&1) || true
-  echo "$NEXT_OUT"
-
-  # Parse the machine-readable output line
-  if ! echo "$NEXT_OUT" | grep -q "HEE_LEE_OSS_NEXT"; then
-    if echo "$NEXT_OUT" | grep -q "session cap"; then
-      echo "Session cap reached. Raise maxTasksPerSession in ~/Hee-Lee Oss/config.yaml, or submit/clear ready work."
+  (
+    cd "$workdir" || exit 1
+    if [ "$promptchannel" = "arg" ]; then
+      "$command" "${args[@]}" "$prompt"
     else
-      echo "No more eligible tasks — stopping."
+      printf '%s' "$prompt" | "$command" "${args[@]}"
+    fi
+  )
+  local rc=$?
+
+  for e in "${scrub_vars[@]}"; do
+    if [ -n "${had[$e]+x}" ]; then export "$e=${saved[$e]}"; fi
+  done
+  return $rc
+}
+
+built=()
+held=()
+no_change=()
+
+i=1
+while [ "$i" -le "$COUNT" ]; do
+  echo ""
+  echo "=== deed $i / $COUNT (agent: $AGENT) ==="
+
+  next_args=(next --lane "$LANE")
+  [ -n "$PROJECT" ] && next_args+=(--repo "Hee-Lee-Oss-Projects/$PROJECT")
+  [ "$NO_FORK" -eq 1 ] && next_args+=(--no-fork)
+  out="$("$HLO" "${next_args[@]}" 2>&1)"
+
+  if ! echo "$out" | grep -qE 'HEE_LEE_OSS_NEXT taskId='; then
+    if echo "$out" | grep -qi 'session cap'; then
+      echo "Session cap reached. Stopping." >&2
+    else
+      echo "No more eligible tasks - stopping."
     fi
     break
   fi
+  line="$(echo "$out" | grep -E 'HEE_LEE_OSS_NEXT taskId=')"
+  taskId="$(echo "$line" | sed -E 's/.*taskId=([^ ]+).*/\1/')"
+  repo="$(echo "$line" | sed -E 's/.*repo=([^ ]+).*/\1/')"
+  ws="$(echo "$line" | sed -E 's/.*workspace=(.+) output=.*/\1/')"
 
-  TASK_ID=$(echo "$NEXT_OUT"  | grep -oP 'taskId=\K\S+')
-  REPO_USED=$(echo "$NEXT_OUT" | grep -oP 'repo=\K\S+')
-  WS=$(echo "$NEXT_OUT"       | grep -oP 'workspace=\K[^ ]+')
+  plan_json="$("$HLO" dispatch --workspace "$ws" --agent "$AGENT" 2>&1)"
+  agentId="$(json_get "$plan_json" agentId)"
+  if [ -z "$agentId" ]; then
+    echo "dispatch failed for $taskId (agent '$AGENT') - skipping." >&2
+    echo "$plan_json" >&2
+    rm -rf "$ws"
+    i=$((i + 1)); continue
+  fi
+  acceptance="$(json_get "$plan_json" acceptance)"
+  kind="$(json_get "$plan_json" kind)"
+  model="$(json_get "$plan_json" model)"
 
-  if [[ ! -d "$WS" ]]; then
-    echo "WARNING: workspace not found at $WS — stopping." >&2
-    break
+  if [ "$acceptance" = "unusable" ]; then
+    echo "held: $taskId - agent '$AGENT' is unusable for this deliverable"
+    held+=("$taskId (unusable by $AGENT)")
+    rm -rf "$ws"
+    i=$((i + 1)); continue
+  fi
+  if [ "$kind" != "cli" ]; then
+    echo "held: $taskId - agent '$AGENT' kind '$kind' is not a CLI this loop can drive"
+    held+=("$taskId (kind $kind unsupported here)")
+    rm -rf "$ws"
+    i=$((i + 1)); continue
   fi
 
-  if [[ "$DRY_RUN" == true ]]; then
-    echo "[dry run] prepared $TASK_ID at $WS"
-    [[ "$KEEP_WORKSPACES" != true ]] && rm -rf "$WS"
-    continue
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "[dry run] would build $taskId with $AGENT (model $model, acceptance $acceptance)"
+    rm -rf "$ws"
+    i=$((i + 1)); continue
   fi
 
-  # Resolve model
-  RESOLVED_MODEL="$MODEL"
-  if [[ "${MODEL,,}" == "auto" ]]; then
-    RESOLVED_MODEL=$(get_auto_model "$WS")
+  echo "-> building $taskId (agent: $AGENT, model: $model)"
+  invoke_registry_agent "$plan_json" "$BUILD_PROMPT" "$ws" >/dev/null
+
+  submit_out="$("$HLO" submit "$taskId" --repo "$repo" --agent "$AGENT" 2>&1)"
+  pr_url="$(echo "$submit_out" | grep -oE 'https://github\.com/[^ ]+/pull/[0-9]+' | head -n1)"
+  if [ -z "$pr_url" ]; then
+    echo "no changes for $taskId - releasing workspace (already done, or needs a human?)."
+    no_change+=("$taskId")
+    rm -rf "$ws"
+    i=$((i + 1)); continue
   fi
-
-  # Build claude arguments
-  CLAUDE_ARGS=("-p" "$PROMPT")
-  if [[ "$PERMISSION_MODE" == "skip" ]]; then
-    CLAUDE_ARGS+=("--dangerously-skip-permissions")
-  else
-    CLAUDE_ARGS+=("--permission-mode" "acceptEdits")
-  fi
-  [[ -n "$RESOLVED_MODEL" ]] && CLAUDE_ARGS+=("--model" "$RESOLVED_MODEL")
-
-  MODEL_LABEL=${RESOLVED_MODEL:+" (model: $RESOLVED_MODEL)"}
-  echo "-> running agent on $TASK_ID$MODEL_LABEL..."
-
-  (cd "$WS" && claude "${CLAUDE_ARGS[@]}")
-
-  # Submit: commit, push, open PR, write receipt
-  echo "-> submitting $TASK_ID..."
-  SUBMIT_OUT=$(hee-lee-oss submit "$TASK_ID" --repo "$REPO_USED" --agent "$AGENT" 2>&1) || true
-  echo "$SUBMIT_OUT"
-
-  PR_URL=$(echo "$SUBMIT_OUT" | grep -oP 'https://github\.com/\S+?/pull/\d+' | head -1)
-  if [[ -n "$PR_URL" ]]; then
-    echo "PR opened: $PR_URL"
-    PR_URLS+=("$PR_URL")
-    ((DONE++))
-    [[ "$KEEP_WORKSPACES" != true ]] && rm -rf "$WS"
-  else
-    echo "WARNING: No PR reported for $TASK_ID. Workspace kept at $WS for inspection."
-  fi
-
-  echo ""
+  echo "PR: $pr_url"
+  built+=("$taskId -> $pr_url")
+  rm -rf "$ws"
+  i=$((i + 1))
 done
 
-# Summary
-echo "============================="
-echo "Done. $DONE deed(s) completed."
-if [[ ${#PR_URLS[@]} -gt 0 ]]; then
-  echo "PRs opened:"
-  for url in "${PR_URLS[@]}"; do echo "  $url"; done
-fi
 echo ""
-hee-lee-oss status
+echo "=== loop finished ==="
+echo "PRs opened (${#built[@]}):"
+for b in "${built[@]:-}"; do [ -n "$b" ] && echo "  $b"; done
+echo "held - needs a human (${#held[@]}):"
+for h in "${held[@]:-}"; do [ -n "$h" ] && echo "  $h"; done
+echo "no changes (${#no_change[@]}):"
+for n in "${no_change[@]:-}"; do [ -n "$n" ] && echo "  $n"; done
+"$HLO" status
