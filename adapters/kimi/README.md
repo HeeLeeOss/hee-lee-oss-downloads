@@ -235,3 +235,11 @@ the flag-surface caveats already in the main README above.
   guardrails + the `MOONSHOT_API_KEY` donated-lane caveat), adapted from `CLAUDE.md`, marker-wrapped
   for idempotent installation.
 - `install.mjs` — Node-only (no dependencies), cross-platform installer/uninstaller.
+
+## Partner repositories
+
+Many tasks land in a repository Hee-Lee Oss does not own — one that published a needs manifest or
+labelled an issue `help wanted`. The flow is identical, but `pull` prints the repo's base branch and
+contribution terms (CLA / DCO / licence) first, the work is contributed under **their** licence and
+conventions, and the PR discloses that it was AI-assisted. `hee-lee-oss complete` / `reopen` do not
+apply upstream. The workspace `CONTEXT.md` carries the full guest rules.

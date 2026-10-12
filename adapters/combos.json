@@ -1,0 +1,57 @@
+{
+  "version": "1",
+  "combos": [
+    {
+      "id": "resilient-build",
+      "name": "Resilient build (priority fallback)",
+      "strategy": "priority",
+      "steps": [
+        { "agentId": "claude-code", "role": "build" },
+        { "agentId": "aider", "role": "build" },
+        { "agentId": "codex", "role": "build" }
+      ]
+    },
+    {
+      "id": "spread-agents",
+      "name": "Spread deeds across agents (round-robin)",
+      "strategy": "round-robin",
+      "steps": [
+        { "agentId": "claude-code" },
+        { "agentId": "aider" },
+        { "agentId": "codex" },
+        { "agentId": "gemini-cli" }
+      ]
+    },
+    {
+      "id": "escalate-cheap-to-strong",
+      "name": "Escalation ladder (cheap -> strong)",
+      "strategy": "escalation",
+      "steps": [
+        { "agentId": "gemini-cli", "role": "build" },
+        { "agentId": "aider", "role": "build" },
+        { "agentId": "claude-code", "role": "build" }
+      ]
+    },
+    {
+      "id": "cross-check-default",
+      "name": "Cross-check (1 producer + 2 cross-vendor verifiers — costs ~2 extra reviews per deed)",
+      "strategy": "cross-check",
+      "steps": [
+        { "agentId": "claude-code", "role": "build" },
+        { "agentId": "gemini-cli", "role": "verify" },
+        { "agentId": "codex", "role": "verify" }
+      ],
+      "params": { "minVerdicts": 1 }
+    },
+    {
+      "id": "best-of-three",
+      "name": "Best of three (fusion — needs -Fusion, ~3x cost)",
+      "strategy": "fusion",
+      "steps": [
+        { "agentId": "claude-code", "role": "build" },
+        { "agentId": "aider", "role": "build" },
+        { "agentId": "codex", "role": "build" }
+      ]
+    }
+  ]
+}

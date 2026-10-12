@@ -59,3 +59,16 @@ expert) review before merge; this extension only opens the PR, it never auto-mer
 - `hee-lee-oss submit <task-id> --repo <owner>/<repo> --agent gemini-cli` commits, pushes from the
   user's fork, opens the PR, and writes the deed receipt with the correct agent id.
 - Never edit files outside the prepared workspace unless the task explicitly targets them.
+
+## Working in a repository we do not own
+
+6. If the task lands in a repository Hee-Lee Oss does not own (`hee-lee-oss pull` prints its
+   contribution terms and base branch):
+   - Read their CONTRIBUTING and PR template first; follow **their** conventions, not ours.
+   - Their licence governs. Never add Hee-Lee Oss branding, badges, or licence headers upstream.
+   - Smallest diff that satisfies the task. Run their tests; never disable one to get green.
+   - The PR discloses AI assistance and links the upstream issue — leave that in.
+   - Never write their issue as `owner/repo#number` in a commit message; GitHub auto-links it into
+     their tracker. Use the URL or prose. A bare `#123` inside a PR against their repo is fine.
+   - `hee-lee-oss complete` / `reopen` do not apply upstream; merged or closed there is the state.
+   - If the task is wrong for that repo, stop and say so. Not opening a PR is a good outcome.

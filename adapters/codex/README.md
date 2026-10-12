@@ -48,7 +48,8 @@ adapters/codex/
 ├── prompts/
 │   ├── hee-lee-oss-start.md    # /prompts:hee-lee-oss-start  — pick + do a task, open a PR
 │   ├── hee-lee-oss-next.md     # /prompts:hee-lee-oss-next   — do the next task in this session
-│   └── hee-lee-oss-status.md   # /prompts:hee-lee-oss-status — show claims + completed deeds
+│   ├── hee-lee-oss-status.md   # /prompts:hee-lee-oss-status — show claims + completed deeds
+│   └── hee-lee-oss-triage.md   # /prompts:hee-lee-oss-triage — triage a partner's issues (gated comment)
 ├── agents-md-snippet.md         # Hee-Lee Oss work rules, marker-wrapped, for AGENTS.md
 ├── install.mjs                  # cross-platform, dependency-free installer (install/uninstall)
 └── README.md
@@ -60,7 +61,7 @@ adapters/codex/
 node adapters/codex/install.mjs
 ```
 
-This copies the three prompt files into `$CODEX_HOME/prompts` (default `~/.codex/prompts`) and
+This copies the prompt files into `$CODEX_HOME/prompts` (default `~/.codex/prompts`) and
 appends the `agents-md-snippet.md` block to `./AGENTS.md` in the current directory (pass
 `--repo <path>` for a different target repo). Re-running is a no-op change in effect: prompt files
 are overwritten with identical content, and the `AGENTS.md` block is replaced in place rather than
@@ -92,7 +93,7 @@ hee-lee-oss doctor
 node adapters/codex/install.mjs --uninstall [--codex-home <dir>] [--repo <dir>]
 ```
 
-Removes the three prompt files from the prompts directory and strips the marker-wrapped block
+Removes the prompt files from the prompts directory and strips the marker-wrapped block
 from `AGENTS.md` (deletes the file only if stripping the block leaves it empty).
 
 ## Use
@@ -102,6 +103,7 @@ In a Codex CLI session, type `/` to open the slash-command menu:
 - `/prompts:hee-lee-oss-start` — pick a task, do it in this session, open a PR.
 - `/prompts:hee-lee-oss-next` — do the next task (loop while you have capacity).
 - `/prompts:hee-lee-oss-status` — see active claims and completed deeds.
+- `/prompts:hee-lee-oss-triage` — research a partner's labelled issue and draft one gated comment.
 
 ## Why interactive only
 
@@ -130,3 +132,11 @@ current docs" — re-confirm at conformance time if Codex's CLI surface has move
 - `agents-md-snippet.md` — the Hee-Lee Oss work rules (agent-neutral architecture rules + refusal
   guardrails), adapted from `CLAUDE.md`, marker-wrapped for idempotent installation.
 - `install.mjs` — Node-only (no dependencies), cross-platform installer/uninstaller.
+
+## Partner repositories
+
+Many tasks land in a repository Hee-Lee Oss does not own — one that published a needs manifest or
+labelled an issue `help wanted`. The flow is identical, but `pull` prints the repo's base branch and
+contribution terms (CLA / DCO / licence) first, the work is contributed under **their** licence and
+conventions, and the PR discloses that it was AI-assisted. `hee-lee-oss complete` / `reopen` do not
+apply upstream. The workspace `CONTEXT.md` carries the full guest rules.

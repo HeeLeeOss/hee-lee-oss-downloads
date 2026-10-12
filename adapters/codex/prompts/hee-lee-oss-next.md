@@ -22,3 +22,21 @@ Continue a Hee-Lee Oss session with the next task. Same rules as `/prompts:hee-l
 
 This prompt is for looping through tasks while I am present. It is interactive — never
 headless, never with `OPENAI_API_KEY` set.
+
+## If the task lands in a repo we do not own
+
+`hee-lee-oss pull` prints `base branch:` and, for external tasks, the repository's contribution
+terms (CLA / DCO / licence / enterprise carve-outs). Surface those before starting — a CLA is a
+decision to make knowingly. `CONTEXT.md` carries the full guest rules; in short:
+
+- Read their `CONTRIBUTING.md` and PR template first and **follow their conventions, not ours**.
+- **Their licence governs.** Never add Hee-Lee Oss branding, badges, or licence headers upstream.
+- **Smallest diff that satisfies the task** — no drive-by refactors, reformatting, or dep bumps.
+- Run their tests and make them pass; never disable a test to get green.
+- The PR discloses AI assistance and links the upstream issue — do not remove that.
+- **Never write their issue as `owner/repo#number`** in commit messages or anything else landing in
+  a public repo — GitHub auto-links it into their tracker. Use the URL, or prose. A bare `#123`
+  inside a PR against their own repo is fine.
+- `hee-lee-oss complete` / `reopen` do **not** apply upstream; merged or closed there is the state.
+- If the task is wrong for that repo (already fixed, superseded, unwanted), **stop and say so**.
+  Not opening a PR is a good outcome.
