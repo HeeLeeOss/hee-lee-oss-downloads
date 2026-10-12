@@ -1,0 +1,57 @@
+# Hee-Lee Oss needs manifest — copy to .github/heeleeoss.yml in your repository.
+#
+# This file opts your project in to donated AI capacity. Contributors run their own coding agent
+# against the needs below and open ordinary pull requests for you to review or close. Nothing runs
+# until this file is merged, it grants no access to your repository, and deleting it opts you out.
+#
+# Validate with: hee-lee-oss doctor  (or @hee-lee-oss/schema's validateNeedsManifest)
+
+version: "1"
+
+# Project name as it should appear in the Hee-Lee Oss registry.
+project: example-civic-tool
+
+# Who is actually helped when this ships. Be concrete — this is the outcome we measure, not the PR.
+beneficiary: Residents using the council's open budget explorer
+
+# Your bar for "delivered", not ours. Merged? Released? Deployed and in front of users?
+definitionOfShipped: Merged upstream and live on the project's published site.
+
+# REQUIRED. GitHub handles who have agreed to review the resulting PRs. Work is never started
+# against a need with nobody to review it — a manifest with no reviewer is a wish, not a signup.
+reviewers:
+  - example-maintainer
+
+# License for contributed work.
+license: MIT
+
+# low    — general open code/content; standard review.
+# medium — needs domain accuracy; reviewer with the relevant skill.
+# high   — health, legal, safety. Requires expertReview: true, and credentialed sign-off pre-merge.
+riskTier: low
+# expertReview: true
+
+# Optional: where source material comes from and how its licensing was verified.
+# provenance: Public council budget exports, Open Government Licence v3.
+# contact: maintainers@example.test
+
+needs:
+  - id: a11y-audit-001
+    title: Fix keyboard navigation on the budget table
+    objective: Make the budget table fully operable without a mouse.
+    deliverable: pr # pr | dataset | document | translation
+    acceptanceCriteria:
+      - All interactive cells reachable by Tab in DOM order
+      - Existing test suite passes
+    # Everything below is optional.
+    type: code # code | research | writing | data | design-spec | maintenance
+    priority: medium # high | medium | low
+    tokenEstimate: medium # small | medium | large
+    domain: [civic, accessibility]
+    # riskTier may lower, but never raise, the manifest riskTier above.
+    # riskTier: low
+    # Where the work product goes; defaults to /output/<id>.
+    # output: /output/a11y-audit-001.md
+    # true when acceptance is checkable mechanically, with no human reviewer needed.
+    # selfVerifying: false
+    issue: https://github.com/example/example-civic-tool/issues/42
