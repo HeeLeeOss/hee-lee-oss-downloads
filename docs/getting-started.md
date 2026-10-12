@@ -145,3 +145,22 @@ limits.
 After your first **merged** PR you can vote on new project proposals. Comment `/vote for` or `/vote against` on any open proposal in the [registry](https://github.com/HeeLeeOss/registry/issues).
 
 Have an idea for a good deed? [Open a proposal](https://github.com/HeeLeeOss/registry/issues/new).
+
+## Working on a partner repository
+
+Not every task lands in a Hee-Lee Oss repo. Projects can opt in by adding `.github/heeleeoss.yml`
+(see [SIGNUP.md](../SIGNUP.md)), and we also work issues that maintainers publicly labelled
+`help wanted`.
+
+The flow is the same — `pull` → run your agent → `submit` — with three differences:
+
+- **`pull` prints the repo's real base branch and its contribution terms** (CLA, DCO, licence,
+  enterprise carve-outs) before you start. Signing a CLA is your decision to make knowingly.
+- **You are a guest.** Their `CONTRIBUTING.md` and conventions beat ours; the work carries their
+  licence; keep the diff to the smallest that does the job; run their tests and never disable one.
+  The PR discloses that it was AI-assisted. The full rules are in the workspace `CONTEXT.md`.
+- **`complete` and `reopen` do not apply.** Upstream, the PR being merged or closed *is* the state —
+  there is no task file of ours in their repo to update.
+
+If a task turns out to be wrong for that repository — already fixed, superseded, or a change the
+maintainers clearly would not want — stop and say so. Not opening a pull request is a good outcome.

@@ -31,6 +31,17 @@ Everything you need to run good-deed work against [Hee-Lee Oss projects](https:/
 | `adapters/aider/` | Aider setup guide |
 | `docs/getting-started.md` | Step-by-step first-deed walkthrough |
 | `docs/looping.md` | How to loop through dozens of tasks in one session |
+| `SIGNUP.md` | **For maintainers** — ask for donated capacity by adding one file to your repo |
+| `docs/heeleeoss.example.yml` | Annotated needs-manifest template to copy into `.github/heeleeoss.yml` |
+
+<p align="center"><img src="https://raw.githubusercontent.com/HeeLeeOss/.github/main/assets/divider.svg" width="100%" height="6" alt=""/></p>
+
+## 🟢 Maintain a project? Ask for capacity
+
+If you maintain an open project that serves the public good and you're short of hands, you can ask
+for donated capacity by adding **one file** to your repository. See **[SIGNUP.md](SIGNUP.md)**.
+
+Merging it is the whole opt-in; deleting it opts you back out. We never send unsolicited work.
 
 <p align="center"><img src="https://raw.githubusercontent.com/HeeLeeOss/.github/main/assets/divider.svg" width="100%" height="6" alt=""/></p>
 
@@ -61,6 +72,13 @@ hee-lee-oss submit <task-id> --repo <owner>/<repo>
 ```
 
 For Claude Code users, install the plugin and use `/hee-lee-oss:start` instead — see `adapters/claude-code/`.
+
+**Working a partner repository?** Many tasks land in projects Hee-Lee Oss does not own — ones that
+published a needs manifest or labelled an issue `help wanted`. The flow is identical, with three
+differences: `hee-lee-oss pull` prints that repo's real base branch and its contribution terms
+(CLA / DCO / licence) *before* you start; your work is contributed under **their** licence and
+conventions and the PR discloses that it was AI-assisted; and `hee-lee-oss complete` / `reopen` do
+not apply — upstream, the pull request being merged or closed is the state.
 
 ### 4 — Loop through many deeds automatically
 
