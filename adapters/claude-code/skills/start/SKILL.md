@@ -1,5 +1,5 @@
 ---
-description: Start a Hee-Lee Oss good-deed session — pick a community task, do it in THIS interactive Claude Code session (on your subscription), and open a PR. Use when the user runs /hee-lee-oss:start or asks to do a Hee-Lee Oss deed.
+description: Start an Hee-Lee Oss good-deed session — pick a community task, do it in THIS interactive Claude Code session (on your subscription), and open a PR. Use when the user runs /hee-lee-oss:start or asks to do an Hee-Lee Oss deed.
 disable-model-invocation: true
 ---
 
@@ -41,5 +41,23 @@ must stay interactive.
 ## 5. Loop or stop
 - Ask if they want another task. If yes, use `/hee-lee-oss:next`.
 - Respect the budget guard — if `hee-lee-oss pull` reports the session cap is reached, stop gracefully.
+
+## If the task lands in a repo we do not own
+
+`hee-lee-oss pull` prints `base branch:` and, for external tasks, the repository's contribution
+terms (CLA / DCO / licence / enterprise carve-outs). Surface those before starting — a CLA is a
+decision to make knowingly. `CONTEXT.md` carries the full guest rules; in short:
+
+- Read their `CONTRIBUTING.md` and PR template first and **follow their conventions, not ours**.
+- **Their licence governs.** Never add Hee-Lee Oss branding, badges, or licence headers upstream.
+- **Smallest diff that satisfies the task** — no drive-by refactors, reformatting, or dep bumps.
+- Run their tests and make them pass; never disable a test to get green.
+- The PR discloses AI assistance and links the upstream issue — do not remove that.
+- **Never write their issue as `owner/repo#number`** in commit messages or anything else landing in
+  a public repo — GitHub auto-links it into their tracker. Use the URL, or prose. A bare `#123`
+  inside a PR against their own repo is fine.
+- `hee-lee-oss complete` / `reopen` do **not** apply upstream; merged or closed there is the state.
+- If the task is wrong for that repo (already fixed, superseded, unwanted), **stop and say so**.
+  Not opening a PR is a good outcome.
 
 Keep the user informed at each step. Never run headless; never set an API key.

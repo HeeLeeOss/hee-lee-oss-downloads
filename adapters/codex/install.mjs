@@ -163,7 +163,7 @@ function main() {
   console.log("Done.");
   console.log("");
   console.log("Next: in a Codex CLI session, type `/` and look for `/prompts:hee-lee-oss-start`,");
-  console.log("`/prompts:hee-lee-oss-next`, `/prompts:hee-lee-oss-status`.");
+  console.log("`/prompts:hee-lee-oss-next`, `/prompts:hee-lee-oss-status`, `/prompts:hee-lee-oss-triage`.");
 }
 
 main();

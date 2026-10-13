@@ -1,0 +1,20 @@
+description = "Triage a partner's labelled issues: sweep, research with commit evidence, judge, draft one gated comment."
+
+prompt = """
+Interactive only. Refuse to proceed if `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set in the environment — that would bill the metered API instead of my own account. Tell me to unset it and restart. Arguments (repo, then optional issue number): {{args}}
+
+1. `hee-lee-oss doctor`.
+2. `hee-lee-oss partners check --repo <repo>` — stop if it proposes a pause (never pass `--write` unless asked).
+3. `hee-lee-oss triage scan --repo <repo>` (skip if an issue number was given); let the user pick.
+4. `hee-lee-oss triage research --repo <repo> --issue <n> --out triage-<n>.json`.
+5. Judge. Read the issue, the dossier and the real diffs; answer every printed checklist item.
+   - never-present claims are not evidence of a fix; explain them, do not post.
+   - A merged PR that mentions the issue is not proof it resolved it; read its diff. PR evidence counts only when merged.
+   - A removed file may have moved; search for its headings before calling it obsolete.
+   - Not resolved / partial / unsure are valid endings: say so and stop.
+   Only if the evidence holds, add a `judgment` block (outcome, evidenceIds, verifiedBy, judgedBy non-empty, judgedAt ISO-8601) to the dossier. For an issue that is still valid, write a judgment with outcome `still-valid` (real judgedBy/judgedAt, verifiedBy saying what you checked), then `hee-lee-oss triage task --finding triage-<n>.json --project <id>` (lowercase slug id); this posts nothing.
+6. `hee-lee-oss triage --finding triage-<n>.json` — show the user the draft and its evidence.
+7. Only on the user's explicit yes for this comment: re-run with `--post`. A yes never carries over to another comment. Posting refuses if the issue changed or any pull request is open against it; research again, don't force.
+
+One comment per issue, ever. Never on someone else's PR. Never on a security issue. Never write another project's issue as owner/repo#number outside their tracker.
+"""

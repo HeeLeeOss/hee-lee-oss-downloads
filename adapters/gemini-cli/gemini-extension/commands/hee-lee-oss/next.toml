@@ -21,4 +21,16 @@ Steps:
 
 This is for looping through tasks while I'm present. It is interactive — never headless, never
 with an API key set.
+
+6. If the task lands in a repository Hee-Lee Oss does not own (`hee-lee-oss pull` prints its
+   contribution terms and base branch):
+   - Read their CONTRIBUTING and PR template first; follow **their** conventions, not ours.
+   - Their licence governs. Never add Hee-Lee Oss branding, badges, or licence headers upstream.
+   - Smallest diff that satisfies the task. Run their tests; never disable one to get green.
+   - The PR discloses AI assistance and links the upstream issue — leave that in.
+   - Never write their issue as `owner/repo#number` in a commit message; GitHub auto-links it into
+     their tracker. Use the URL or prose. A bare `#123` inside a PR against their repo is fine.
+   - `hee-lee-oss complete` / `reopen` do not apply upstream; merged or closed there is the state.
+   - If the task is wrong for that repo, stop and say so. Not opening a PR is a good outcome.
+
 """

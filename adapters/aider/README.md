@@ -66,3 +66,11 @@ Provider-prefixed model ids per tier (Anthropic models shown; adjust the provide
 ## Status
 
 Not yet conformance-passed. Treat every flag above as "best-documented as of July 2026, unverified in this repo" until `adapters/_conformance/` (B4) runs a golden task through `computeDispatch` and the real `aider` binary and records a passing receipt. Do not mark this agent `trusted: true` in `adapters/registry.json` until that gate passes.
+
+## Partner repositories
+
+Many tasks land in a repository Hee-Lee Oss does not own — one that published a needs manifest or
+labelled an issue `help wanted`. The flow is identical, but `pull` prints the repo's base branch and
+contribution terms (CLA / DCO / licence) first, the work is contributed under **their** licence and
+conventions, and the PR discloses that it was AI-assisted. `hee-lee-oss complete` / `reopen` do not
+apply upstream. The workspace `CONTEXT.md` carries the full guest rules.

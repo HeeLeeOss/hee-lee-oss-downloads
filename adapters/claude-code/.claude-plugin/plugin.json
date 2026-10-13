@@ -1,11 +1,17 @@
 {
   "name": "hee-lee-oss",
-  "version": "0.1.0",
-  "description": "Run Hee-Lee Oss good-deed tasks inside Claude Code, interactively on your subscription.",
+  "version": "0.2.0",
+  "description": "Run Hee-Lee Oss good-deed tasks inside Claude Code, interactively on your subscription \u2014 on Hee-Lee Oss projects or on partner repositories that asked for help.",
   "author": {
     "name": "Hee-Lee Oss",
-    "url": "https://github.com/Hee-Lee-Oss-Projects/hee-lee-oss-downloads"
+    "url": "https://github.com/HeeLeeOss/hee-lee-oss-downloads"
   },
-  "homepage": "https://github.com/Hee-Lee-Oss-Projects/hee-lee-oss-downloads",
-  "keywords": ["hee-lee-oss", "good-deeds", "ai-for-good", "open-source"]
+  "homepage": "https://github.com/HeeLeeOss/hee-lee-oss-downloads",
+  "keywords": [
+    "hee-lee-oss",
+    "good-deeds",
+    "ai-for-good",
+    "open-source",
+    "open-source-contribution"
+  ]
 }

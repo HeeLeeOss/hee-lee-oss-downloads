@@ -122,7 +122,7 @@ before running a long session.
 bash hee-lee-oss-loop.sh --project open-coding-curriculum --count 30 --agent claude-code
 ```
 
-`-Project`/`--project` pins to one project slug (resolved to `Hee-Lee-Oss-Projects/<slug>`)
+`-Project`/`--project` pins to one project slug (resolved to `HeeLeeOss/<slug>`)
 instead of auto-rotating across the registry. Omit it to let Hee-Lee Oss auto-pick the
 highest-priority task across all projects.
 

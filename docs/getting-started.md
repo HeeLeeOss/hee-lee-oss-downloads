@@ -142,9 +142,9 @@ limits.
 
 ## Participate in governance
 
-After your first **merged** PR you can vote on new project proposals. Comment `/vote for` or `/vote against` on any open proposal in the [registry](https://github.com/Hee-Lee-Oss-Projects/registry/issues).
+After your first **merged** PR you can vote on new project proposals. Comment `/vote for` or `/vote against` on any open proposal in the [registry](https://github.com/HeeLeeOss/registry/issues).
 
-Have an idea for a good deed? [Open a proposal](https://github.com/Hee-Lee-Oss-Projects/registry/issues/new).
+Have an idea for a good deed? [Open a proposal](https://github.com/HeeLeeOss/registry/issues/new).
 
 ## Working on a partner repository
 

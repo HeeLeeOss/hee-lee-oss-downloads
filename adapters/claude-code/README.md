@@ -1,41 +1,49 @@
 # Hee-Lee Oss — Claude Code adapter
 
-A Claude Code **plugin** that runs Hee-Lee Oss good-deed tasks inside your interactive session, on your subscription (donated-compute lane).
+A Claude Code **plugin** that runs Hee-Lee Oss good-deed tasks inside an interactive session, on your
+subscription (donated-compute lane). It wraps the agent-neutral `@hee-lee-oss/cli` (`pull` / `submit`).
 
 ## Install
 
-```
-/plugin marketplace add Hee-Lee-Oss-Projects/hee-lee-oss-downloads
+```text
+/plugin marketplace add HeeLeeOss/hee-lee-oss-downloads
 /plugin install hee-lee-oss
 ```
 
-Or manually copy this folder into your Claude Code plugins directory, then:
+Then make sure the CLI is available and set up:
 
 ```bash
-npm install -g @hee-lee-oss/cli
+npm i -g @hee-lee-oss/cli   # (until published: pnpm -C packages/cli build && npm link)
 hee-lee-oss init
 hee-lee-oss doctor
 ```
 
 ## Use
 
-| Skill | What it does |
-|---|---|
-| `/hee-lee-oss:start` | Pick a task, do it in this session, open a PR |
-| `/hee-lee-oss:next` | Pick the next task and continue the session |
-| `/hee-lee-oss:status` | Show active claims and completed deeds |
+- `/hee-lee-oss:start` — pick a task, do it in this session, open a PR.
+- `/hee-lee-oss:next` — do the next task (loop while you have capacity).
+- `/hee-lee-oss:status` — see active claims and completed deeds.
 
 ## Why interactive only
 
-This adapter is **interactive and human-present by design** — it runs on your Pro/Max subscription. It refuses to proceed if `ANTHROPIC_API_KEY` is set (that would bill the pay-as-you-go API instead of your subscription).
-
-For unattended batch runs, use the loop scripts: `../../../scripts/hee-lee-oss-loop.ps1` or `../../../scripts/hee-lee-oss-loop.sh`.
+This adapter is **interactive and human-present by design** so it draws from your Pro/Max
+subscription. It refuses to run if `ANTHROPIC_API_KEY` is set (that would bill the API). The
+autonomous/funded path is a separate component (`@hee-lee-oss/runner`), not this plugin.
 
 ## Contents
 
 - `.claude-plugin/plugin.json` — plugin manifest
-- `skills/start/SKILL.md` — `/hee-lee-oss:start`
-- `skills/next/SKILL.md` — `/hee-lee-oss:next`
-- `skills/status/SKILL.md` — `/hee-lee-oss:status`
+- `skills/` — `/hee-lee-oss:start`, `/hee-lee-oss:next`, `/hee-lee-oss:status`
 - `settings.json` — pre-approved permissions for `hee-lee-oss`, `gh`, and `git`
 - `hooks/hooks.json` — session-start reminder
+- `eval/` — thin wrapper over the shared conformance harness in [`adapters/_conformance/`](../_conformance/README.md).
+  `node adapters/claude-code/eval/run-eval.mjs --plan-only` is the old agent-free dry-run check;
+  without the flag it runs the full gate, which invokes `claude` and spends your quota.
+
+## Partner repositories
+
+Many tasks land in a repository Hee-Lee Oss does not own — one that published a needs manifest or
+labelled an issue `help wanted`. The flow is identical, but `pull` prints the repo's base branch and
+contribution terms (CLA / DCO / licence) first, the work is contributed under **their** licence and
+conventions, and the PR discloses that it was AI-assisted. `hee-lee-oss complete` / `reopen` do not
+apply upstream. The workspace `CONTEXT.md` carries the full guest rules.
