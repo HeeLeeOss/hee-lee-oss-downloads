@@ -35,7 +35,7 @@ required.
 ## 2. Check it parses
 
 ```bash
-npm install -g @hee-lee-oss/cli
+npm install -g @heeleeoss/cli
 hee-lee-oss signups --repos <you>/<your-repo>
 ```
 

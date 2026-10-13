@@ -16,7 +16,7 @@ This guide walks you through your first good deed from zero to merged PR.
 ## Step 1 — Install the Hee-Lee Oss CLI
 
 ```bash
-npm install -g @hee-lee-oss/cli
+npm install -g @heeleeoss/cli
 ```
 
 Run the first-time setup:

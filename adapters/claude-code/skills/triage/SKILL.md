@@ -42,6 +42,8 @@ or `gh pr diff <url>`). Answer every checklist item the tool printed, in your ow
 - `never-present` claims are not evidence of anything being fixed. Explain them; do not post.
 - A merged PR that _mentions_ the issue is not proof it _resolved_ it. Read what it changed. Pull
   request evidence only counts when its `change` is "merged".
+- `possibly-resolved` means merged work references the issue without saying it fixes it — read the
+  diffs; it can become `already-merged`/`resolved` only through your judgment.
 - A removed file may have moved. Search for its headings before calling it `obsolete`.
 - "Not resolved", "only partly", and "not sure" are valid, good endings. Say so and stop. For
   `still-valid`, offer: `hee-lee-oss triage task --finding triage-<n>.json --project <id>`

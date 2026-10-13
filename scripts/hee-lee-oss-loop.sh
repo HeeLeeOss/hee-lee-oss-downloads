@@ -56,7 +56,7 @@ elif [ -x "$SCRIPT_DIR/node_modules/.bin/hee-lee-oss" ]; then
   HLO="$SCRIPT_DIR/node_modules/.bin/hee-lee-oss"
 else
   echo "hee-lee-oss CLI not found on PATH or at $SCRIPT_DIR/node_modules/.bin/hee-lee-oss." >&2
-  echo "Install it first: npm install -g @hee-lee-oss/cli (see README.md)." >&2
+  echo "Install it first: npm install -g @heeleeoss/cli (see README.md)." >&2
   exit 1
 fi
 
