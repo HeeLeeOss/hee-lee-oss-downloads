@@ -8,7 +8,7 @@ just automates the pull → build → PR loop you'd otherwise do by hand.
 ## Prerequisites
 
 - Node.js (for the CLI and the JSON parsing the `.sh` script uses).
-- The `hee-lee-oss` CLI installed and on your PATH: `npm install -g @hee-lee-oss/cli`.
+- The `hee-lee-oss` CLI installed and on your PATH: `npm install -g @heeleeoss/cli`.
 - `git` and `gh` (GitHub CLI), authenticated.
 - Whichever coding agent CLI you intend to build with, installed and authenticated on your own
   account/subscription (e.g. `claude`, `gemini`, `codex`, `aider`). The loop does not install or

@@ -4,7 +4,7 @@
 # against the needs below and open ordinary pull requests for you to review or close. Nothing runs
 # until this file is merged, it grants no access to your repository, and deleting it opts you out.
 #
-# Validate with: hee-lee-oss doctor  (or @hee-lee-oss/schema's validateNeedsManifest)
+# Validate with: hee-lee-oss doctor  (or @heeleeoss/schema's validateNeedsManifest)
 
 version: "1"
 

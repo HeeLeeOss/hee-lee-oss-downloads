@@ -177,7 +177,7 @@ node adapters/kimi/install.mjs [--skills-dir <dir>] [--repo <dir>] [--uninstall]
 Then make sure the CLI is available and set up (same as every adapter):
 
 ```bash
-npm i -g @hee-lee-oss/cli   # (until published: pnpm -C packages/cli build && npm link)
+npm i -g @heeleeoss/cli   # (until published: pnpm -C packages/cli build && npm link)
 hee-lee-oss init
 hee-lee-oss doctor
 ```

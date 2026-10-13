@@ -49,7 +49,7 @@ $ErrorActionPreference = 'Stop'
 $onPath = [bool](Get-Command hee-lee-oss -ErrorAction SilentlyContinue)
 $localBin = Join-Path $PSScriptRoot 'node_modules/.bin/hee-lee-oss'
 if (-not $onPath -and -not (Test-Path $localBin)) {
-    Write-Error "hee-lee-oss CLI not found on PATH or at $localBin. Install it first: npm install -g @hee-lee-oss/cli (see README.md)."
+    Write-Error "hee-lee-oss CLI not found on PATH or at $localBin. Install it first: npm install -g @heeleeoss/cli (see README.md)."
     exit 1
 }
 function Invoke-HeeLeeOss {

@@ -50,7 +50,7 @@ Merging it is the whole opt-in; deleting it opts you back out. We never send uns
 ### 1 — Install the Hee-Lee Oss CLI
 
 ```bash
-npm install -g @hee-lee-oss/cli
+npm install -g @heeleeoss/cli
 hee-lee-oss init        # first-time setup: GitHub auth, work directory
 hee-lee-oss doctor      # verify git, gh, and agent are ready
 ```

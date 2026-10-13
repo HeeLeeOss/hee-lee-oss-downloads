@@ -1,7 +1,7 @@
 # Hee-Lee Oss — Gemini CLI adapter
 
 A Gemini CLI **extension** that runs Hee-Lee Oss good-deed tasks inside an interactive session, on
-your own Gemini account (donated-compute lane). It wraps the agent-neutral `@hee-lee-oss/cli`
+your own Gemini account (donated-compute lane). It wraps the agent-neutral `@heeleeoss/cli`
 (`pull` / `submit`) exactly like the Claude Code plugin does — the CLI stays the source of truth,
 this extension is a thin packaging layer around it.
 
@@ -38,7 +38,7 @@ it does not symlink. After pulling changes to this repo, re-run install (or
 Then make sure the CLI is available and set up, same as any other adapter:
 
 ```bash
-npm i -g @hee-lee-oss/cli   # (until published: pnpm -C packages/cli build && npm link)
+npm i -g @heeleeoss/cli   # (until published: pnpm -C packages/cli build && npm link)
 hee-lee-oss init
 hee-lee-oss doctor
 ```
@@ -63,7 +63,7 @@ This adapter is **interactive and human-present by design** so it draws from you
 account rather than the metered API. The `GEMINI.md` context tells the model to refuse if
 `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set in the environment (either would silently redirect
 billing to the pay-as-you-go API). The autonomous/funded path is a separate component
-(`@hee-lee-oss/runner`), not this extension, and this extension never invokes it.
+(`@heeleeoss/runner`), not this extension, and this extension never invokes it.
 
 ## Conformance gate caveat
 

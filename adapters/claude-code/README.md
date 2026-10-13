@@ -1,7 +1,7 @@
 # Hee-Lee Oss — Claude Code adapter
 
 A Claude Code **plugin** that runs Hee-Lee Oss good-deed tasks inside an interactive session, on your
-subscription (donated-compute lane). It wraps the agent-neutral `@hee-lee-oss/cli` (`pull` / `submit`).
+subscription (donated-compute lane). It wraps the agent-neutral `@heeleeoss/cli` (`pull` / `submit`).
 
 ## Install
 
@@ -13,7 +13,7 @@ subscription (donated-compute lane). It wraps the agent-neutral `@hee-lee-oss/cl
 Then make sure the CLI is available and set up:
 
 ```bash
-npm i -g @hee-lee-oss/cli   # (until published: pnpm -C packages/cli build && npm link)
+npm i -g @heeleeoss/cli   # (until published: pnpm -C packages/cli build && npm link)
 hee-lee-oss init
 hee-lee-oss doctor
 ```
@@ -28,7 +28,7 @@ hee-lee-oss doctor
 
 This adapter is **interactive and human-present by design** so it draws from your Pro/Max
 subscription. It refuses to run if `ANTHROPIC_API_KEY` is set (that would bill the API). The
-autonomous/funded path is a separate component (`@hee-lee-oss/runner`), not this plugin.
+autonomous/funded path is a separate component (`@heeleeoss/runner`), not this plugin.
 
 ## Contents
 
