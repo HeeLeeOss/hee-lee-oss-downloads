@@ -6,7 +6,8 @@
     "name": "Hee-Lee Oss",
     "url": "https://github.com/HeeLeeOss/hee-lee-oss-downloads"
   },
-  "homepage": "https://github.com/HeeLeeOss/hee-lee-oss-downloads",
+  "license": "MIT",
+  "homepage":"https://github.com/HeeLeeOss/hee-lee-oss-downloads",
   "keywords": [
     "hee-lee-oss",
     "good-deeds",
