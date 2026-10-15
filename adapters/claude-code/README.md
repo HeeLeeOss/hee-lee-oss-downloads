@@ -49,16 +49,23 @@ prints one line, and a permissions file. It has no servers, no bundled code and 
 its own. When you invoke a skill, Claude runs these commands in your session:
 
 - **`hee-lee-oss`** (the separately installed `@heeleeoss/cli`) — `init`, `doctor`, `browse`,
-  `triage`, `partners`, `pull`, `next`, `status`, `submit`, `complete`, `reopen`. `pull` fetches
-  public task data from the Hee-Lee Oss registry and the project's GitHub repository and prepares a
-  local workspace. `submit` pushes your branch and opens a pull request. Deed receipts are written
-  to a local Hee-Lee Oss working directory; sharing them is opt-in.
+  `triage`, `partners`, `pull`, `next`, `status`, `submit`, `complete`, `reopen`.
+  - `browse` and `next` download the project registry (a JSON file, by default
+    `raw.githubusercontent.com/HeeLeeOss/registry`, configurable as `registryUrl`) with a plain
+    HTTPS request. `pull` does not contact the registry: it works from a local task file.
+  - `pull` uses `gh`/`git` against GitHub only: it forks and clones the target repository, reads
+    the repo's default branch, license, `CONTRIBUTING`/`LICENSE` files and the upstream issue's
+    state (assignees, labels, linked pull requests) to check the work is still wanted and free. It
+    also reads local files (the task file, the partner registry and the triage skip list).
+  - `submit` re-checks the upstream issue, pushes your branch to your fork and opens a pull request.
+  - Deed receipts are written to a local Hee-Lee Oss working directory and are not uploaded.
 - **`git`** — checkout, add, commit, push, status, rev-parse, in the task workspace.
 - **`gh`** (GitHub CLI) — `gh repo fork`, `gh pr create`, `gh api user` and read-only `gh api` /
   `gh pr diff` lookups, using the GitHub account you are already signed in to.
 
-Data leaves your machine only to GitHub (your fork, the pull request and its comments) and to the
-Hee-Lee Oss registry when you pull a task. Nothing is sent to Anthropic or any other service by the
+Data leaves your machine only to GitHub (your fork, the pull request and its comments, plus the
+read-only lookups above) and, when you run `browse` or `next`, in a download request to the registry
+host (GitHub's `raw.githubusercontent.com`), which sends no data of yours. Nothing is sent to Anthropic or any other service by the
 plugin, and it never reads or transmits your AI account credentials, `ANTHROPIC_API_KEY` or
 GitHub tokens — the skills only *refuse to run* if `ANTHROPIC_API_KEY` is set. Every pull request is
 disclosed as AI-assisted. See [PRIVACY.md](https://github.com/jdev1977/hee-lee-oss/blob/main/PRIVACY.md) for the project's data handling.
