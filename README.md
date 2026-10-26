@@ -22,7 +22,8 @@ Everything you need to run good-deed work against [Hee-Lee Oss projects](https:/
 | `scripts/hee-lee-oss-loop.sh` | Same loop for macOS / Linux (`--agent <id>`) |
 | `scripts/README.md` | Full reference for the loop scripts: flags, registry-driven agent model, secrets/billing safety |
 | `adapters/registry.json` | Reference copy of the agent registry the loop scripts read (`argsTemplate`, model tiers, permission fragments, auth scrub vars) — the installed `hee-lee-oss` CLI ships its own copy; this one is for browsing/documentation |
-| `adapters/claude-code/` | Full Claude Code plugin — `/hee-lee-oss:start`, `/hee-lee-oss:next`, `/hee-lee-oss:status` |
+| `adapters/sandbox-registry.json` | Reference copy of the sandbox provider registry — for browsing/documentation; the installed CLI ships its own |
+| `adapters/claude-code/` | Full Claude Code plugin — `/hee-lee-oss:start`, `:next`, `:work`, `:triage`, `:ignite`, `:status` |
 | `adapters/gemini-cli/` | Gemini CLI extension + setup guide |
 | `adapters/codex/` | Codex CLI custom prompts + `AGENTS.md` snippet + installer |
 | `adapters/kimi/` | Kimi (Moonshot) Code CLI skills + `AGENTS.md` snippet + installer |
@@ -68,17 +69,29 @@ hee-lee-oss browse
 ```bash
 hee-lee-oss pull --task-file <path/to/task.json>
 # open your agent in the workspace directory and do the work
+# (leave the change in the working tree; don't run git commit or git push yourself)
 hee-lee-oss submit <task-id> --repo <owner>/<repo>
+# submit stages your working tree through a host-controlled clone (git never runs in the
+# workspace), runs the submit gates, then commits with the repository's convention,
+# pushes from your fork and opens the PR
 ```
 
 For Claude Code users, install the plugin and use `/hee-lee-oss:start` instead — see `adapters/claude-code/`.
+
+**If submit holds or blocks.** Exit 2 is a hold: a gate wants a human to look. Your workspace is
+kept, nothing is pushed, and if the change is right you re-run `hee-lee-oss submit <task-id> --force`
+from a terminal. Exit 3 is a block: a secret or the deed's canary token was found, nothing is
+pushed, and a `STOP` file halts further unattended work. Look at why with `hee-lee-oss stop --status`,
+and clear it with `hee-lee-oss stop --clear` only once you have dealt with the cause.
 
 **Working a partner repository?** Many tasks land in projects Hee-Lee Oss does not own — ones that
 published a needs manifest or labelled an issue `help wanted`. The flow is identical, with three
 differences: `hee-lee-oss pull` prints that repo's real base branch and its contribution terms
 (CLA / DCO / licence) *before* you start; your work is contributed under **their** licence and
 conventions and the PR discloses that it was AI-assisted; and `hee-lee-oss complete` / `reopen` do
-not apply — upstream, the pull request being merged or closed is the state.
+not apply — upstream, the pull request being merged or closed is the state. A repository's needs
+manifest may also declare `agentRules` and per-need `touches`; they are shown in `CONTEXT.md` and
+enforced at `submit` (see [SIGNUP.md](SIGNUP.md)).
 
 ### 4 — Loop through many deeds automatically
 
@@ -91,6 +104,9 @@ not apply — upstream, the pull request being merged or closed is the state.
 ```bash
 bash scripts/hee-lee-oss-loop.sh --count 20 --agent claude-code
 ```
+
+The loop keeps any workspace a submit gate holds (under `~/Hee-Lee Oss/queue/<task-id>/`) and carries
+on, and it stops on a block; it also checks for a `STOP` file before each slot.
 
 Both default to `claude-code` if you omit `-Agent`/`--agent`. Swap in any id from
 `adapters/registry.json` — `gemini-cli`, `codex`, `aider`, `kimi`, `cursor-agent`, `copilot` — and

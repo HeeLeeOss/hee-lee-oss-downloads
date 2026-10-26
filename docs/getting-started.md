@@ -73,8 +73,8 @@ This creates a workspace at `~/Hee-Lee Oss/queue/<task-id>/` containing:
 
 | File | What it is |
 |---|---|
-| `.hee-lee-oss/TASK.md` | What to build, acceptance criteria, output destination |
-| `.hee-lee-oss/CONTEXT.md` | Background, guardrails, and refusal rules |
+| `.hee-lee-oss/TASK.md` | What to build, acceptance criteria, output destination — and, if the maintainer set them, **Touches:** and **Do not touch:** lines |
+| `.hee-lee-oss/CONTEXT.md` | Background, guardrails, and refusal rules — and, for a partner repository, a "This repository's own rules" section |
 | `.hee-lee-oss/task.json` | Machine-readable task metadata |
 
 Read `TASK.md` and `CONTEXT.md` before starting. The context file includes refusal guardrails — if the task would cause harm, mislead anyone, or require expertise you don't have, stop and flag it instead of proceeding.
@@ -103,13 +103,20 @@ The skill handles everything from here — it reads the task, does the work, and
 hee-lee-oss submit <task-id> --repo <owner>/<repo>
 ```
 
-This:
-1. Commits the deliverable with a DCO sign-off
-2. Pushes from your fork of the project repo
-3. Opens a pull request
-4. Writes a deed receipt to `~/Hee-Lee Oss/logs/<task-id>.json`
+Git never runs inside your workspace, and your agent must not commit or push itself — leave the change
+in the working tree. `submit` stages your working tree through a host-controlled clone, runs the
+submit gates, then commits with a DCO sign-off using the repository's commit convention, pushes from
+your fork, opens the pull request, and writes a deed receipt to `~/Hee-Lee Oss/logs/<task-id>.json`.
 
-You'll see the PR URL in the output. That's your contribution.
+There are three outcomes:
+
+- **Opened.** You'll see the PR URL in the output. That's your contribution.
+- **Hold (exit 2).** A gate wants a human to look at the change. Your workspace is kept and nothing is
+  pushed. Read the findings; if the change is right, re-run `hee-lee-oss submit <task-id> --force`
+  from a terminal.
+- **Block (exit 3).** A secret or the deed's canary token was found. Nothing is pushed and a `STOP`
+  file halts further unattended work. Check it with `hee-lee-oss stop --status`, and clear it with
+  `hee-lee-oss stop --clear` only after you've dealt with the cause.
 
 ---
 
@@ -159,6 +166,10 @@ The flow is the same — `pull` → run your agent → `submit` — with three d
 - **You are a guest.** Their `CONTRIBUTING.md` and conventions beat ours; the work carries their
   licence; keep the diff to the smallest that does the job; run their tests and never disable one.
   The PR discloses that it was AI-assisted. The full rules are in the workspace `CONTEXT.md`.
+- **The maintainer may have set rules.** A needs manifest can declare `agentRules` (paths not to
+  touch, a branch prefix, a commit subject, a PR template) and per-need `touches`. They are shown in
+  `TASK.md` / `CONTEXT.md`, and `submit` enforces them — a path outside **Touches** or inside **Do not
+  touch** is a hold. See [SIGNUP.md](../SIGNUP.md).
 - **`complete` and `reopen` do not apply.** Upstream, the PR being merged or closed *is* the state —
   there is no task file of ours in their repo to update.
 
