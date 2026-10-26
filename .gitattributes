@@ -1,0 +1,2 @@
+# The loop script must stay LF: bash rejects CRLF, and the sync from the main repo compares bytes.
+*.sh text eol=lf

@@ -30,7 +30,8 @@
       "auth": {
         "keyEnv": "ANTHROPIC_API_KEY",
         "scrubEnv": ["ANTHROPIC_API_KEY"]
-      }
+      },
+      "sandbox": { "docker-sbx": { "agent": "claude" } }
     },
     {
       "id": "aider",

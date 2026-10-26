@@ -1,6 +1,6 @@
 {
   "name": "hee-lee-oss",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Run Hee-Lee Oss good-deed tasks inside Claude Code, interactively on your subscription \u2014 on Hee-Lee Oss projects or on partner repositories that asked for help.",
   "author": {
     "name": "Hee-Lee Oss",

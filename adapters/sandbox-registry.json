@@ -1,0 +1,25 @@
+{
+  "version": "1",
+  "providers": [
+    {
+      "id": "docker-sbx",
+      "isolation": "microvm",
+      "command": "sbx",
+      "minVersion": "0.48.0",
+      "envFlag": "-e",
+      "templates": {
+        "version":   ["version"],
+        "list":      ["ls", "--json"],
+        "policies":  ["policy", "ls", "--format", "json"],
+        "secrets":   ["secret", "ls", "--format", "json"],
+        "create":    ["create", "--clone", "--name", "{name}", "--no-progress", "{agent}", "{source}"],
+        "allowHost": ["policy", "allow", "network", "--sandbox", "{name}", "{host}"],
+        "exec":      ["exec", "-i", "{env}", "{name}", "{argv}"],
+        "log":       ["policy", "log", "--json", "--limit", "500"],
+        "stop":      ["stop", "{name}"],
+        "remove":    ["rm", "-f", "{name}"]
+      },
+      "clone": { "fetchUrl": "git://127.0.0.1:{port}/{repo}" }
+    }
+  ]
+}

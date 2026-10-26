@@ -28,7 +28,7 @@ Requires [Gemini CLI](https://github.com/google-gemini/gemini-cli) with the exte
 gemini extensions install ./adapters/gemini-cli/gemini-extension
 
 # or, once this repo/extension is published, from GitHub directly:
-gemini extensions install https://github.com/HeeLeeOss/hee-lee-oss-downloads --ref main
+gemini extensions install https://github.com/jdev1977/hee-lee-oss --ref main
 ```
 
 `gemini extensions install` **copies** the extension into `~/.gemini/extensions/hee-lee-oss/` —

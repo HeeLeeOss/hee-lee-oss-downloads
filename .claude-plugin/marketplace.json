@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Hee-Lee Oss — turn spare AI capacity into open-source good deeds.",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {
       "name": "hee-lee-oss",
       "source": "./adapters/claude-code",
-      "description": "Run Hee-Lee Oss good-deed tasks inside Claude Code, interactively on your subscription — on Hee-Lee Oss projects or on partner repositories that asked for help."
+      "description": "Run Hee-Lee Oss good-deed tasks inside Claude Code, on your subscription."
     }
   ]
 }

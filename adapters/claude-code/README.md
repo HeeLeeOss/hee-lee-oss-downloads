@@ -49,7 +49,8 @@ prints one line, and a permissions file. It has no servers, no bundled code and 
 its own. When you invoke a skill, Claude runs these commands in your session:
 
 - **`hee-lee-oss`** (the separately installed `@heeleeoss/cli`) — `init`, `doctor`, `browse`,
-  `triage`, `partners`, `pull`, `next`, `status`, `submit`, `complete`, `reopen`.
+  `triage`, `partners`, `pull`, `next`, `status`, `stage`, `submit`, `stop`, `sandbox`, `complete`,
+  `reopen`.
   - `browse` and `next` download the project registry (a JSON file, by default
     `raw.githubusercontent.com/HeeLeeOss/registry`, configurable as `registryUrl`) with a plain
     HTTPS request. `pull` does not contact the registry: it works from a local task file.
@@ -57,9 +58,17 @@ its own. When you invoke a skill, Claude runs these commands in your session:
     the repo's default branch, license, `CONTRIBUTING`/`LICENSE` files and the upstream issue's
     state (assignees, labels, linked pull requests) to check the work is still wanted and free. It
     also reads local files (the task file, the partner registry and the triage skip list).
-  - `submit` re-checks the upstream issue, pushes your branch to your fork and opens a pull request.
+  - `stage` stages a workspace through a host-controlled clone and runs the submit gates; it opens no
+    pull request.
+  - `submit` re-checks the upstream issue, stages through the same clone, runs the submit gates, then
+    commits with the repository's convention, pushes the branch to your fork and opens a pull request.
+    A gate `hold` (exit 2) waits for a person; a `block` (exit 3) also writes a `STOP` file.
+  - `stop` shows the `STOP` tripwire, or clears it (`stop --clear`, a person only).
+  - `sandbox` (`doctor`, `create`, `collect`, `rm`) drives the Docker Sandboxes microVM that unattended
+    (`ignite`) runs use. It never launches the agent.
   - Deed receipts are written to a local Hee-Lee Oss working directory and are not uploaded.
-- **`git`** — checkout, add, commit, push, status, rev-parse, in the task workspace.
+- **`git`** — checkout, add, commit, push, status, rev-parse, run by the CLI in a host-controlled
+  staging clone, never in the task workspace.
 - **`gh`** (GitHub CLI) — `gh repo fork`, `gh pr create`, `gh api user` and read-only `gh api` /
   `gh pr diff` lookups, using the GitHub account you are already signed in to.
 
@@ -79,4 +88,6 @@ Many tasks land in a repository Hee-Lee Oss does not own — one that published 
 labelled an issue `help wanted`. The flow is identical, but `pull` prints the repo's base branch and
 contribution terms (CLA / DCO / licence) first, the work is contributed under **their** licence and
 conventions, and the PR discloses that it was AI-assisted. `hee-lee-oss complete` / `reopen` do not
-apply upstream. The workspace `CONTEXT.md` carries the full guest rules.
+apply upstream. The workspace `CONTEXT.md` carries the full guest rules. A repo's needs manifest may
+also declare `agentRules` and `touches`; they appear in `CONTEXT.md` and are enforced at `submit`
+(see [docs/maintainers.md](https://github.com/jdev1977/hee-lee-oss/blob/main/docs/maintainers.md)).

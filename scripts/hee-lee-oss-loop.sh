@@ -136,10 +136,28 @@ built=()
 held=()
 no_change=()
 
+stop_warned=0
 i=1
 while [ "$i" -le "$COUNT" ]; do
   echo ""
   echo "=== deed $i / $COUNT (agent: $AGENT) ==="
+
+  # A STOP file (written by a submit gate block) halts the loop before it pulls more work.
+  # Halt only when the CLI really reports a STOP file; an older CLI without `stop` just warns once.
+  stop_rc=0
+  stop_out="$("$HLO" stop --status 2>&1)" || stop_rc=$?
+  if [ "$stop_rc" -ne 0 ]; then
+    if echo "$stop_out" | grep -qi 'unknown command' || ! echo "$stop_out" | grep -q 'STOP'; then
+      if [ "$stop_warned" -eq 0 ]; then
+        echo "loop: this CLI predates 'hee-lee-oss stop'; update with npm install -g @heeleeoss/cli (held/blocked outcomes cannot be detected until then)" >&2
+        stop_warned=1
+      fi
+    else
+      echo "STOP is set - not pulling more work. Run 'hee-lee-oss stop --status' and clear it only after reading why." >&2
+      echo "$stop_out" >&2
+      break
+    fi
+  fi
 
   next_args=(next --lane "$LANE")
   [ -n "$PROJECT" ] && next_args+=(--repo "Hee-Lee-Oss-Projects/$PROJECT")
@@ -194,16 +212,49 @@ while [ "$i" -le "$COUNT" ]; do
   invoke_registry_agent "$plan_json" "$BUILD_PROMPT" "$ws" >/dev/null
 
   submit_out="$("$HLO" submit "$taskId" --repo "$repo" --agent "$AGENT" 2>&1)"
-  pr_url="$(echo "$submit_out" | grep -oE 'https://github\.com/[^ ]+/pull/[0-9]+' | head -n1)"
-  if [ -z "$pr_url" ]; then
-    echo "no changes for $taskId - releasing workspace (already done, or needs a human?)."
-    no_change+=("$taskId")
-    rm -rf "$ws"
-    i=$((i + 1)); continue
+  # submit's last stdout line is HEE_LEE_OSS_SUBMIT taskId=<id> verdict=<v> [pr=<url>] gates=<...>
+  # staging=<dir>. Its verdict is the only thing this loop trusts: a PR URL appearing (or not) in the
+  # text says nothing about whether a human is needed.
+  submit_line="$(printf '%s\n' "$submit_out" | tr -d '\r' | grep -E '^[[:space:]]*HEE_LEE_OSS_SUBMIT[[:space:]]' | tail -n1)"
+  verdict="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]verdict=([^ ]+).*/\1/p')"
+  pr_url="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]pr=([^ ]+).*/\1/p')"
+  gates="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]gates=([^ ]+).*/\1/p')"
+  [ -z "$gates" ] && gates="none"
+  if [ -z "$verdict" ]; then
+    verdict="error"
+    echo "submit for $taskId printed no outcome line - treating it as an error; workspace kept at $ws." >&2
+    printf '%s\n' "$submit_out" | tail -n 20 >&2
   fi
-  echo "PR: $pr_url"
-  built+=("$taskId -> $pr_url")
-  rm -rf "$ws"
+  case "$verdict" in
+    opened)
+      echo "PR: $pr_url"
+      built+=("$taskId -> $pr_url")
+      rm -rf "$ws"
+      ;;
+    no-change)
+      echo "no changes for $taskId - releasing workspace (already done)."
+      no_change+=("$taskId")
+      rm -rf "$ws"
+      ;;
+    stopped)
+      echo "agent stopped: $taskId (see result.json); workspace kept at $ws"
+      held+=("$taskId (agent stopped)")
+      ;;
+    hold)
+      echo "held: $taskId - a submit gate wants a human (gates=$gates); workspace kept at $ws"
+      echo "  re-run: hee-lee-oss submit $taskId --repo $repo --agent $AGENT --force   (from a terminal, if the change is right)"
+      held+=("$taskId (gate hold: $gates)")
+      ;;
+    block)
+      echo "BLOCKED: $taskId (gates=$gates). A STOP file now halts submit/stage; run 'hee-lee-oss stop --status' and clear it only after reading why."
+      held+=("$taskId (blocked: $gates)")
+      break
+      ;;
+    *)
+      echo "held: $taskId - submit ended with verdict '$verdict'; workspace kept at $ws"
+      held+=("$taskId (submit $verdict)")
+      ;;
+  esac
   i=$((i + 1))
 done
 
@@ -213,6 +264,7 @@ echo "PRs opened (${#built[@]}):"
 for b in "${built[@]:-}"; do [ -n "$b" ] && echo "  $b"; done
 echo "held - needs a human (${#held[@]}):"
 for h in "${held[@]:-}"; do [ -n "$h" ] && echo "  $h"; done
+echo "  (held workspaces are kept under ~/Hee-Lee Oss/queue/<id>)"
 echo "no changes (${#no_change[@]}):"
 for n in "${no_change[@]:-}"; do [ -n "$n" ] && echo "  $n"; done
 "$HLO" status
