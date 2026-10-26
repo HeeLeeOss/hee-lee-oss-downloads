@@ -105,7 +105,7 @@ enforced at `submit` (see [SIGNUP.md](SIGNUP.md)).
 bash scripts/hee-lee-oss-loop.sh --count 20 --agent claude-code
 ```
 
-The loop keeps any workspace a submit gate holds (under `~/Hee-Lee Oss/queue/<task-id>/`) and carries
+The loop keeps any workspace a submit gate holds, or where the agent reports it should stop (under `~/Hee-Lee Oss/queue/<task-id>/`) and carries
 on, and it stops on a block; it also checks for a `STOP` file before each slot.
 
 Both default to `claude-code` if you omit `-Agent`/`--agent`. Swap in any id from
