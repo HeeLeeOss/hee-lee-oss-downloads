@@ -13,7 +13,7 @@ Each iteration does four things:
 1. **`hee-lee-oss next`** — picks the next eligible task and prepares a workspace (`~/Hee-Lee Oss/queue/<task-id>/`) with `TASK.md`, `CONTEXT.md`, and a claim file
 2. **`hee-lee-oss dispatch --workspace <ws> --agent <id>`** — resolves, from `adapters/registry.json`, everything needed to run that task with your chosen agent: the concrete model for the task's capability tier, the acceptance verdict (can this agent's output auto-merge, or does it need a human?), and a ready-to-run invocation (command, args, supervised permission flags, and whether the prompt goes over stdin or as an argument)
 3. **The resolved agent invocation runs** in the workspace and produces the deliverable — the script never hardcodes a vendor binary; whichever agent id you passed via `-Agent`/`--agent` is what actually runs
-4. **`hee-lee-oss submit`** — commits the output, pushes from your fork, opens the PR, and writes a deed receipt, then the workspace is deleted (freeing the session-cap slot) and the loop moves to the next task
+4. **`hee-lee-oss submit`** — stages the working tree through a host-controlled clone (git never runs in the workspace), runs the submit gates, then commits with the repository's convention, pushes from your fork, opens the PR, and writes a deed receipt. When the PR opens, the workspace is deleted (freeing the session-cap slot) and the loop moves to the next task. If a gate **holds** the change (exit 2) or the agent reports it should stop, the loop keeps that workspace and carries on; if it **blocks** (exit 3), the loop stops. Before each slot it also checks for a `STOP` file.
 
 Each task is a fresh agent invocation. Context is reset between tasks, so you never hit the per-conversation limit regardless of how many deeds you run.
 
@@ -153,6 +153,12 @@ Check that `~/Hee-Lee Oss/queue/` contains the workspaces and that `TASK.md` loo
 | `No more eligible tasks` | Queue empty for this project/lane | Try without `-Project`/`--project` to pick from the full registry |
 | `held: <task> - agent '<id>' is unusable for this deliverable` | The dispatch acceptance verdict for this agent/task pair is `unusable` | Switch `-Agent`/`--agent`, or handle that task manually with a stronger agent |
 | `held: <task> - agent '<id>' kind '<kind>' is not a CLI this loop can drive` | The chosen agent isn't a `kind: "cli"` registry entry | Pick a different `-Agent`/`--agent` id — this loop only drives CLI agents |
+| `held: <id> - a submit gate wants a human (gates=<gates>); workspace kept at <ws>` | A submit gate (sensitive path, odd file shape, a maintainer's `touches` / `doNotTouch`, …) held the change (exit 2). Nothing was pushed; the workspace is kept under `~/Hee-Lee Oss/queue/<id>/` and the loop continues | Read the findings; if the change is right, run the `--force` command the loop prints, from a terminal |
+| `BLOCKED: <id> (gates=<gates>)` | A secret or the deed's canary token was found (exit 3). A `STOP` file now halts `submit`, `stage` and unattended runs, and the loop stops | Run `hee-lee-oss stop --status` to see why; remove the secret; clear it with `hee-lee-oss stop --clear` only after reading why |
+| `STOP is set - not pulling more work` | A `STOP` file already exists | Same as above: `hee-lee-oss stop --status`, then `--clear` once you've dealt with the cause |
+| `agent stopped: <id> (see result.json); workspace kept at <ws>` | The agent reported it should not continue | Read `.hee-lee-oss/result.json` in the workspace |
+| `held: <id> - submit ended with verdict '<v>'` | Submit ended without opening a PR or holding (for example an error) | Run `hee-lee-oss submit <id>` by hand and read its output |
+| `loop: this CLI predates 'hee-lee-oss stop'; update with npm install -g @heeleeoss/cli` | One-time warning: your CLI is too old to report STOP status | Update the CLI; held and blocked outcomes cannot be detected until then |
 | `no changes for <task-id> - releasing workspace` | The agent produced no diff, or the task was already done | Inspect the workspace before it's cleaned up (or re-run with `-DryRun` first); may need manual review |
 
 The loop scrubs every registry-declared provider key (`auth.scrubEnv` per agent, e.g.

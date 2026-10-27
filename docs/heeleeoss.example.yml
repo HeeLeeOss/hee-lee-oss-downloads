@@ -35,6 +35,28 @@ riskTier: low
 # provenance: Public council budget exports, Open Government Licence v3.
 # contact: maintainers@example.test
 
+# Optional: how to run your checks. Contributors' tooling runs these before opening a PR, so a change
+# that breaks your tests never reaches you. Leave it out and we detect your test command (package.json,
+# Cargo.toml, go.mod, pytest, a Makefile `test` target); `commands: []` says there is nothing to run.
+# A need can override this with its own `checks:`.
+# checks:
+#   setup: [npm ci]
+#   commands: [npm test]
+#   timeoutSec: 600
+
+# Optional: house rules for agents working in your repo. Some are enforced when the contributor
+# submits (doNotTouch, branchPrefix, commitSubject, commitSubjectMax, commitTrailers, prTemplate);
+# `instructions` is only shown to the agent, never enforced. Signed-off-by and Co-authored-by
+# trailers are managed by us and cannot be set here. A need can override any field with its own.
+# agentRules:
+#   doNotTouch: [docs/legal/**, CHANGELOG.md]  # paths the change must not modify (globs, repo-relative)
+#   branchPrefix: contrib                      # prefix for contributor branch names
+#   commitSubject: "fix: {title}"              # tokens: {title}, {taskId}, {issue}
+#   commitSubjectMax: 72                       # longest allowed commit subject (50-100)
+#   commitTrailers: ["Refs: {issue}"]          # extra "Key: value" trailers on every commit
+#   prTemplate: .github/PULL_REQUEST_TEMPLATE.md  # PR body template to follow, or "none"
+#   instructions: Use British spelling.        # free text shown to the agent (not enforced)
+
 needs:
   - id: a11y-audit-001
     title: Fix keyboard navigation on the budget table
@@ -50,6 +72,9 @@ needs:
     domain: [civic, accessibility]
     # riskTier may lower, but never raise, the manifest riskTier above.
     # riskTier: low
+    # Globs this change is expected to stay within; files outside them are flagged at submit and the
+    # list is shown to the agent.
+    # touches: [src/components/budget-table/**]
     # Where the work product goes; defaults to /output/<id>.
     # output: /output/a11y-audit-001.md
     # true when acceptance is checkable mechanically, with no human reviewer needed.

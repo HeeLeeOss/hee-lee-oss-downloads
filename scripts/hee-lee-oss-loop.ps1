@@ -103,10 +103,25 @@ function Invoke-RegistryAgent {
     }
 }
 
-$built = @(); $held = @(); $noChange = @()
+$built = @(); $held = @(); $noChange = @(); $stopWarned = $false
 
 for ($i = 1; $i -le $Count; $i++) {
     Write-Host "`n=== deed $i / $Count (agent: $Agent) ===" -ForegroundColor Cyan
+
+    # A STOP file (written by a submit gate block) halts the loop before it pulls more work.
+    $stopOut = (Invoke-HeeLeeOss stop --status 2>&1 | Out-String)
+    if ($LASTEXITCODE -ne 0) {
+        # Halt only when the CLI really reports a STOP file; an older CLI without `stop` just warns once.
+        if ($stopOut -match 'unknown command' -or $stopOut -cnotmatch 'STOP') {
+            if (-not $stopWarned) {
+                Write-Warning "loop: this CLI predates 'hee-lee-oss stop'; update with npm install -g @heeleeoss/cli (held/blocked outcomes cannot be detected until then)"
+                $stopWarned = $true
+            }
+        } else {
+            Write-Warning "STOP is set - not pulling more work. Run 'hee-lee-oss stop --status' and clear it only after reading why.`n$stopOut"
+            break
+        }
+    }
 
     $nextArgs = @('next', '--lane', $Lane)
     if ($Project) { $nextArgs += @('--repo', "Hee-Lee-Oss-Projects/$Project") }
@@ -148,19 +163,55 @@ for ($i = 1; $i -le $Count; $i++) {
     Invoke-RegistryAgent -Dispatch $d -Prompt $BuildPrompt -WorkingDir $ws | Out-Null
 
     $submitOut = (Invoke-HeeLeeOss submit $taskId --repo $repo --agent $Agent 2>&1 | Out-String)
-    $pr = [regex]::Match($submitOut, 'https://github\.com/\S+?/pull/(\d+)')
-    if (-not $pr.Success) {
-        Write-Host "no changes for $taskId - releasing workspace (already done, or needs a human?)." -ForegroundColor Yellow
-        $noChange += $taskId
-        Remove-Item -Recurse -Force $ws -ErrorAction SilentlyContinue; continue
+    # submit's last stdout line is HEE_LEE_OSS_SUBMIT taskId=<id> verdict=<v> [pr=<url>] gates=<...>
+    # staging=<dir>. Its verdict is the only thing this loop trusts: a PR URL appearing (or not) in the
+    # text says nothing about whether a human is needed. Takes the last such line, CRLF-tolerant.
+    $submitLine = $null
+    foreach ($l in ($submitOut -split "`r?`n")) {
+        if ($l -cmatch '^\s*HEE_LEE_OSS_SUBMIT\s+(.*)$') { $submitLine = $Matches[1] }
     }
-    Write-Host "PR: $($pr.Value)" -ForegroundColor Green
-    $built += "$taskId -> $($pr.Value)"
-    Remove-Item -Recurse -Force $ws -ErrorAction SilentlyContinue
+    $verdict = $null; $prUrl = ''; $gates = 'none'
+    if ($submitLine) {
+        $vm = [regex]::Match($submitLine, '(?:^|\s)verdict=(\S+)')
+        if ($vm.Success) { $verdict = $vm.Groups[1].Value }
+        $pm = [regex]::Match($submitLine, '(?:^|\s)pr=(\S+)')
+        if ($pm.Success) { $prUrl = $pm.Groups[1].Value }
+        $gm = [regex]::Match($submitLine, '(?:^|\s)gates=(\S+)')
+        if ($gm.Success) { $gates = $gm.Groups[1].Value }
+    }
+    if (-not $verdict) {
+        $verdict = 'error'
+        Write-Warning "submit for $taskId printed no outcome line - treating it as an error; workspace kept at $ws."
+        (($submitOut -split "`r?`n") | Select-Object -Last 20) | ForEach-Object { Write-Host "  $_" }
+    }
+    if ($verdict -eq 'opened') {
+        Write-Host "PR: $prUrl" -ForegroundColor Green
+        $built += "$taskId -> $prUrl"
+        Remove-Item -Recurse -Force $ws -ErrorAction SilentlyContinue
+    } elseif ($verdict -eq 'no-change') {
+        Write-Host "no changes for $taskId - releasing workspace (already done)." -ForegroundColor Yellow
+        $noChange += $taskId
+        Remove-Item -Recurse -Force $ws -ErrorAction SilentlyContinue
+    } elseif ($verdict -eq 'stopped') {
+        Write-Host "agent stopped: $taskId (see result.json); workspace kept at $ws" -ForegroundColor Yellow
+        $held += "$taskId (agent stopped)"
+    } elseif ($verdict -eq 'hold') {
+        Write-Host "held: $taskId - a submit gate wants a human (gates=$gates); workspace kept at $ws" -ForegroundColor Yellow
+        Write-Host "  re-run: hee-lee-oss submit $taskId --repo $repo --agent $Agent --force   (from a terminal, if the change is right)"
+        $held += "$taskId (gate hold: $gates)"
+    } elseif ($verdict -eq 'block') {
+        Write-Host "BLOCKED: $taskId (gates=$gates). A STOP file now halts submit/stage; run 'hee-lee-oss stop --status' and clear it only after reading why." -ForegroundColor Red
+        $held += "$taskId (blocked: $gates)"
+        break
+    } else {
+        Write-Host "held: $taskId - submit ended with verdict '$verdict'; workspace kept at $ws" -ForegroundColor Yellow
+        $held += "$taskId (submit $verdict)"
+    }
 }
 
 Write-Host "`n=== loop finished ===" -ForegroundColor Cyan
 Write-Host "PRs opened ($($built.Count)):" -ForegroundColor Green; $built | ForEach-Object { Write-Host "  $_" }
 Write-Host "held - needs a human ($($held.Count)):" -ForegroundColor Yellow; $held | ForEach-Object { Write-Host "  $_" }
+Write-Host "  (held workspaces are kept under ~/Hee-Lee Oss/queue/<id>)"
 Write-Host "no changes ($($noChange.Count)):" -ForegroundColor DarkYellow; $noChange | ForEach-Object { Write-Host "  $_" }
 Invoke-HeeLeeOss status

@@ -50,8 +50,24 @@ the script by hand to swap the binary. That's gone. Both scripts are now thin wr
 3. The script runs exactly that invocation — no agent name, flag, or model string is baked into
    the script itself. Adding a brand-new agent to the registry (or picking a different one at the
    command line) requires **zero script edits**.
-4. `hee-lee-oss submit <taskId> --repo <repo> --agent <id>` commits, pushes, and opens the PR,
-   recording which agent did the work.
+4. `hee-lee-oss submit <taskId> --repo <repo> --agent <id>` copies your change into a clean
+   staging clone, runs the submit gates there, and only then commits, pushes, and opens the PR,
+   recording which agent did the work. It ends with one `HEE_LEE_OSS_SUBMIT ... verdict=<v>` line,
+   and the loop acts on that verdict:
+   - **opened** (exit 0): the PR is up; the loop prints it and releases the workspace.
+   - **no-change** (exit 0): nothing to submit; the loop releases the workspace.
+   - **hold** (exit 2): a gate wants a human. Nothing was pushed and the workspace is kept. If the
+     change is right, re-run `hee-lee-oss submit <taskId> --repo <repo> --agent <id> --force` from a
+     terminal.
+   - **block** (exit 3): a gate blocked it and a `STOP` file now halts `submit`/`stage`. The loop
+     stops. Run `hee-lee-oss stop --status` to see why, and `hee-lee-oss stop --clear` only after
+     reading it.
+   - **stopped**: your agent reported it should not continue (see `.hee-lee-oss/result.json`); the
+     workspace is kept.
+
+   Before each deed the loop also checks `hee-lee-oss stop --status` and does not pull more work
+   while a `STOP` file is set. An older CLI without `stop` only gets a one-time warning; update it
+   (`npm install -g @heeleeoss/cli`) so held and blocked outcomes can be detected.
 
 `--agent <registry-id>` accepts any id present in `adapters/registry.json` — run
 `hee-lee-oss agents` to list what's currently registered (e.g. `claude-code`, `aider`, `codex`,
@@ -69,14 +85,24 @@ committed files.
 
 ## Options
 
-| Flag (ps1 / sh) | Meaning | Default |
-|---|---|---|
-| `-Count` / `--count` | Number of deed slots to attempt | 10 |
-| `-Agent` / `--agent` | Registry agent id to build with | `claude-code` |
-| `-Project` / `--project` | Pin to one project slug instead of auto-rotating | (none) |
-| `-Lane` / `--lane` | Task lane to pull from | `donated` |
-| `-NoFork` / `--no-fork` | Clone directly instead of forking (needs push access) | off |
-| `-DryRun` / `--dry-run` | Show the resolved plan per task without building/submitting | off |
+| Flag (ps1 / sh)          | Meaning                                                     | Default       |
+| ------------------------ | ----------------------------------------------------------- | ------------- |
+| `-Count` / `--count`     | Number of deed slots to attempt                             | 10            |
+| `-Agent` / `--agent`     | Registry agent id to build with                             | `claude-code` |
+| `-Project` / `--project` | Pin to one project slug instead of auto-rotating            | (none)        |
+| `-Lane` / `--lane`       | Task lane to pull from                                      | `donated`     |
+| `-NoFork` / `--no-fork`  | Clone directly instead of forking (needs push access)       | off           |
+| `-DryRun` / `--dry-run`  | Show the resolved plan per task without building/submitting | off           |
+
+## If the loop holds or stops
+
+Held workspaces are kept under `~/Hee-Lee Oss/queue/<id>`; the loop never deletes them.
+
+| The loop prints                                                                  | What it means                                                                 | What to do                                                                                                                                                                 |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `held: <id> - a submit gate wants a human (gates=<...>); workspace kept at <ws>` | A submit gate (exit 2) wants a person to look. Nothing was pushed.            | Read the gates, inspect the workspace, and if the change is right run the printed `re-run: hee-lee-oss submit <id> --repo <repo> --agent <agent> --force` from a terminal. |
+| `BLOCKED: <id> (gates=<...>). A STOP file now halts submit/stage; ...`           | A gate blocked the change (exit 3) and wrote the `STOP` file. The loop stops. | Run `hee-lee-oss stop --status` to read why; run `hee-lee-oss stop --clear` only after you have.                                                                           |
+| `agent stopped: <id> (see result.json); workspace kept at <ws>`                  | Your agent decided not to continue and said so in `.hee-lee-oss/result.json`. | Read `result.json` in the workspace; fix or discard the task by hand.                                                                                                      |
 
 ## What this script is not
 

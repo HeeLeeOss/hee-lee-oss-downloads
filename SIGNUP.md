@@ -62,12 +62,46 @@ You will see your project, its beneficiary, your reviewers, and the tasks your n
 
 - It states up front that it was prepared with **AI assistance**, and names the agent.
 - It links the issue or need it answers.
-- It follows **your** conventions — your `CONTRIBUTING.md`, code style, commit format and tests.
+- It follows **your** conventions — your `CONTRIBUTING.md`, code style, commit format and tests. If
+  you declare a commit convention or a PR template (below), it is applied automatically.
 - It is the smallest diff that does the job: no drive-by refactors, reformatting, or dependency
   bumps.
 - It carries **your** licence and contribution terms. We never add Hee-Lee Oss branding, badges, or
   licence headers to your repository.
 - Your tests are run and must pass. We never disable or weaken a test to get green.
+
+## Tell contributors' agents your rules
+
+The same manifest can carry house rules for the agents that work your needs. Put `agentRules` at the
+top level, and `touches` (and, if one need differs, its own `agentRules`) on a need:
+
+```yaml
+agentRules:
+  doNotTouch: [docs/legal/**, CHANGELOG.md]
+  branchPrefix: contrib
+  commitSubject: "fix: {title}" # tokens: {title}, {taskId}, {issue}
+  commitSubjectMax: 72 # longest subject, 50-100 (default 72)
+  commitTrailers: ["Refs: {issue}"]
+  prTemplate: .github/PULL_REQUEST_TEMPLATE.md
+  instructions: Use British spelling.
+
+needs:
+  - id: a11y-audit-001
+    # ...
+    touches: [src/components/budget-table/**]
+    agentRules: { commitSubject: "a11y: {title}" } # per-need override, field by field
+```
+
+`pull` reads these, and your `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md` and
+`CONTRIBUTING.md`, from the base commit and shows them to the agent as untrusted, fenced text.
+
+| Kind | What happens |
+|---|---|
+| Enforced at `submit` | `doNotTouch` and `touches` hold the deed for a human when a changed file breaks them; the branch prefix (a deed on any other branch is refused); the commit subject and trailers (our sign-off is always added, after yours); the PR body filled into your PR template, with the AI disclosure last. |
+| Shown to the agent and judged by the review lens (`instructions`, the discovered files) | Not enforced. The reviewer routes a clear conflict with them to a human. Each discovered file is capped at 4000 characters and all of them together at 12000; `instructions` at 2000. |
+
+Rules can narrow what we do, never loosen it: they cannot switch off a gate, the sign-off or the AI
+disclosure. A `prTemplate` path that is not a safe path inside the repository is refused at `pull`.
 
 ## If we send you a proposal first
 
