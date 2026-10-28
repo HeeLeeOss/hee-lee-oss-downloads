@@ -82,6 +82,15 @@ json_get() {
   ' "$2" <<<"$1"
 }
 
+# Release a slot's workspace before submit has run, unless the deed was resumed with an answered question.
+release_ws() {
+  if [ -n "$resume" ]; then
+    echo "keeping $taskId's files: it was resumed with an answered question and its build has not launched; the next run picks it up again"
+  else
+    rm -rf "$ws"
+  fi
+}
+
 # --- Generic agent runner: works for ANY registry entry, never hardcodes a vendor binary. The
 #     dispatch plan (from `hee-lee-oss dispatch`) carries the resolved command/args/promptChannel
 #     plus auth.scrubEnv -- the env vars that must be unset so the call bills to this agent's own
@@ -132,6 +141,32 @@ invoke_registry_agent() {
   return $rc
 }
 
+# The HEE_LEE_OSS_NEXT / HEE_LEE_OSS_SUBMIT lines start their fields with v=1. machine_fields MARKER LINE
+# puts the fields after the marker (and after v=1) in MF_REST. A line with no v= is read as version 1 with
+# a one-time warning; any other version is refused (return 1, message on stderr naming it).
+nov_warned=""
+machine_fields() {
+  local marker="$1" line rest ver
+  line="$(printf '%s' "$2" | tr -d '\r')"
+  rest="${line#*"$marker"}"
+  rest="${rest#"${rest%%[![:space:]]*}"}"
+  case "$rest" in
+    v=1|v=1[[:space:]]*)
+      rest="${rest#v=1}"; rest="${rest#"${rest%%[![:space:]]*}"}" ;;
+    v=*)
+      ver="${rest%%[[:space:]]*}"; ver="${ver#v=}"
+      echo "loop: the $marker line is version ${ver:-(empty)}, but this script only understands version 1 - update it (re-download hee-lee-oss-loop.sh)." >&2
+      MF_REST=""; return 1 ;;
+    *)
+      case "$nov_warned" in *"|$marker|"*) ;; *)
+        echo "loop: the $marker line has no v= field; reading it as version 1 (a newer hee-lee-oss prints v=1)." >&2
+        nov_warned="$nov_warned|$marker|" ;;
+      esac ;;
+  esac
+  MF_REST="$rest"
+  return 0
+}
+
 built=()
 held=()
 no_change=()
@@ -164,7 +199,8 @@ while [ "$i" -le "$COUNT" ]; do
   [ "$NO_FORK" -eq 1 ] && next_args+=(--no-fork)
   out="$("$HLO" "${next_args[@]}" 2>&1)"
 
-  if ! echo "$out" | grep -qE 'HEE_LEE_OSS_NEXT taskId='; then
+  line="$(printf '%s\n' "$out" | tr -d '\r' | grep -E '^[[:space:]]*HEE_LEE_OSS_NEXT([[:space:]]|$)' | tail -n1)"
+  if [ -z "$line" ]; then
     if echo "$out" | grep -qi 'session cap'; then
       echo "Session cap reached. Stopping." >&2
     else
@@ -172,17 +208,26 @@ while [ "$i" -le "$COUNT" ]; do
     fi
     break
   fi
-  line="$(echo "$out" | grep -E 'HEE_LEE_OSS_NEXT taskId=')"
-  taskId="$(echo "$line" | sed -E 's/.*taskId=([^ ]+).*/\1/')"
-  repo="$(echo "$line" | sed -E 's/.*repo=([^ ]+).*/\1/')"
-  ws="$(echo "$line" | sed -E 's/.*workspace=(.+) output=.*/\1/')"
+  # A version this script does not understand stops the loop visibly rather than guessing at the fields.
+  machine_fields HEE_LEE_OSS_NEXT "$line" || break
+  fields="$MF_REST"
+  taskId="$(echo "$fields" | sed -nE 's/.*(^| )taskId=([^ ]+).*/\2/p')"
+  repo="$(echo "$fields" | sed -nE 's/.*(^| )repo=([^ ]+).*/\2/p')"
+  ws="$(echo "$fields" | sed -nE 's/.*workspace=(.+) output=.*/\1/p')"
+  # resume=question: the deed was resumed after a person answered its question. Until submit has run,
+  # releasing it would lose the answer and the work, so its workspace is never removed before then.
+  resume="$(echo "$fields" | sed -nE 's/.*(^| )resume=([^ ]+).*/\2/p')"
+  if [ -z "$taskId" ] || [ -z "$repo" ] || [ -z "$ws" ]; then
+    echo "No more eligible tasks - stopping (the HEE_LEE_OSS_NEXT line could not be read: $line)." >&2
+    break
+  fi
 
   plan_json="$("$HLO" dispatch --workspace "$ws" --agent "$AGENT" 2>&1)"
   agentId="$(json_get "$plan_json" agentId)"
   if [ -z "$agentId" ]; then
     echo "dispatch failed for $taskId (agent '$AGENT') - skipping." >&2
     echo "$plan_json" >&2
-    rm -rf "$ws"
+    release_ws
     i=$((i + 1)); continue
   fi
   acceptance="$(json_get "$plan_json" acceptance)"
@@ -192,33 +237,51 @@ while [ "$i" -le "$COUNT" ]; do
   if [ "$acceptance" = "unusable" ]; then
     echo "held: $taskId - agent '$AGENT' is unusable for this deliverable"
     held+=("$taskId (unusable by $AGENT)")
-    rm -rf "$ws"
+    release_ws
     i=$((i + 1)); continue
   fi
   if [ "$kind" != "cli" ]; then
     echo "held: $taskId - agent '$AGENT' kind '$kind' is not a CLI this loop can drive"
     held+=("$taskId (kind $kind unsupported here)")
-    rm -rf "$ws"
+    release_ws
     i=$((i + 1)); continue
   fi
 
   if [ "$DRY_RUN" -eq 1 ]; then
     echo "[dry run] would build $taskId with $AGENT (model $model, acceptance $acceptance)"
-    rm -rf "$ws"
+    release_ws
     i=$((i + 1)); continue
   fi
 
+  if [ -n "$resume" ]; then
+    # The build is about to launch: the answer is now used. Recorded host-side so the deed is never served
+    # and rebuilt again, and from here the normal rules apply (a hold waits for a person).
+    consume_out="$("$HLO" question consume "$taskId" 2>&1)" || true
+    case "$consume_out" in
+      *"resume consumed"*) ;;
+      *) echo "warning: could not mark $taskId's answered question as used; a later run may serve it again" >&2 ;;
+    esac
+    resume=""
+  fi
   echo "-> building $taskId (agent: $AGENT, model: $model)"
   invoke_registry_agent "$plan_json" "$BUILD_PROMPT" "$ws" >/dev/null
 
   submit_out="$("$HLO" submit "$taskId" --repo "$repo" --agent "$AGENT" 2>&1)"
-  # submit's last stdout line is HEE_LEE_OSS_SUBMIT taskId=<id> verdict=<v> [pr=<url>] gates=<...>
+  # submit's last stdout line is HEE_LEE_OSS_SUBMIT v=1 taskId=<id> verdict=<v> [pr=<url>] gates=<...>
   # staging=<dir>. Its verdict is the only thing this loop trusts: a PR URL appearing (or not) in the
-  # text says nothing about whether a human is needed.
+  # text says nothing about whether a human is needed. A version other than 1 is an error, not a guess.
   submit_line="$(printf '%s\n' "$submit_out" | tr -d '\r' | grep -E '^[[:space:]]*HEE_LEE_OSS_SUBMIT[[:space:]]' | tail -n1)"
+  if [ -n "$submit_line" ]; then
+    if machine_fields HEE_LEE_OSS_SUBMIT "$submit_line"; then
+      submit_line=" $MF_REST"
+    else
+      submit_line=""
+    fi
+  fi
   verdict="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]verdict=([^ ]+).*/\1/p')"
   pr_url="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]pr=([^ ]+).*/\1/p')"
   gates="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]gates=([^ ]+).*/\1/p')"
+  hold_reason="$(printf '%s' "$submit_line" | sed -nE 's/.*[[:space:]]reason=([^ ]+).*/\1/p')"
   [ -z "$gates" ] && gates="none"
   if [ -z "$verdict" ]; then
     verdict="error"
@@ -241,6 +304,12 @@ while [ "$i" -le "$COUNT" ]; do
       held+=("$taskId (agent stopped)")
       ;;
     hold)
+      if [ "$hold_reason" = "question" ]; then
+        echo "held: $taskId - the agent asked a question; workspace kept at $ws"
+        echo "  answer it: hee-lee-oss answer $taskId --text \"...\"   (the next run resumes it)"
+        held+=("$taskId (question)")
+        i=$((i + 1)); continue
+      fi
       echo "held: $taskId - a submit gate wants a human (gates=$gates); workspace kept at $ws"
       echo "  re-run: hee-lee-oss submit $taskId --repo $repo --agent $AGENT --force   (from a terminal, if the change is right)"
       held+=("$taskId (gate hold: $gates)")

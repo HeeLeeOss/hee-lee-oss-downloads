@@ -52,7 +52,7 @@ the script by hand to swap the binary. That's gone. Both scripts are now thin wr
    command line) requires **zero script edits**.
 4. `hee-lee-oss submit <taskId> --repo <repo> --agent <id>` copies your change into a clean
    staging clone, runs the submit gates there, and only then commits, pushes, and opens the PR,
-   recording which agent did the work. It ends with one `HEE_LEE_OSS_SUBMIT ... verdict=<v>` line,
+   recording which agent did the work. It ends with one `HEE_LEE_OSS_SUBMIT v=1 ... verdict=<v>` line (a line of any other version is treated as an error),
    and the loop acts on that verdict:
    - **opened** (exit 0): the PR is up; the loop prints it and releases the workspace.
    - **no-change** (exit 0): nothing to submit; the loop releases the workspace.

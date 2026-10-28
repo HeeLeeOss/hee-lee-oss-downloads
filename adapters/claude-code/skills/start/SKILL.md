@@ -11,8 +11,9 @@ must stay interactive.
 
 ## 0. Billing & safety pre-flight (do this first, every time)
 
-- **Refuse to proceed if `ANTHROPIC_API_KEY` is set** in the environment. That would bill the
-  pay-as-you-go API instead of the user's subscription. Tell the user to unset it and restart.
+- **Refuse to proceed if `ANTHROPIC_API_KEY` is set** in the environment. The CLI only warns and
+  ignite scrubs it; you must refuse. That would bill the pay-as-you-go API instead of the user's
+  subscription. Tell the user to unset it and restart.
 - Confirm `hee-lee-oss` is installed: run `hee-lee-oss doctor`. If git/gh aren't ready, help fix that first.
 
 ## 1. Pick a task

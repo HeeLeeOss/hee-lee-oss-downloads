@@ -5,6 +5,7 @@
       "id": "resilient-build",
       "name": "Resilient build (priority fallback)",
       "strategy": "priority",
+      "fallbackOn": ["error", "throttle", "unavailable"],
       "steps": [
         { "agentId": "claude-code", "role": "build" },
         { "agentId": "aider", "role": "build" },
@@ -15,6 +16,7 @@
       "id": "spread-agents",
       "name": "Spread deeds across agents (round-robin)",
       "strategy": "round-robin",
+      "fallbackOn": [],
       "steps": [
         { "agentId": "claude-code" },
         { "agentId": "aider" },
@@ -26,6 +28,7 @@
       "id": "escalate-cheap-to-strong",
       "name": "Escalation ladder (cheap -> strong)",
       "strategy": "escalation",
+      "fallbackOn": ["error", "throttle", "unavailable"],
       "steps": [
         { "agentId": "gemini-cli", "role": "build" },
         { "agentId": "aider", "role": "build" },
@@ -36,6 +39,7 @@
       "id": "cross-check-default",
       "name": "Cross-check (1 producer + 2 cross-vendor verifiers — costs ~2 extra reviews per deed)",
       "strategy": "cross-check",
+      "fallbackOn": [],
       "steps": [
         { "agentId": "claude-code", "role": "build" },
         { "agentId": "gemini-cli", "role": "verify" },
@@ -47,6 +51,7 @@
       "id": "best-of-three",
       "name": "Best of three (fusion — needs -Fusion, ~3x cost)",
       "strategy": "fusion",
+      "fallbackOn": [],
       "steps": [
         { "agentId": "claude-code", "role": "build" },
         { "agentId": "aider", "role": "build" },

@@ -26,7 +26,7 @@ Loop good-deed work end-to-end without the user picking tasks or changing direct
 
 1. **Select + prepare:** run `hee-lee-oss next [--repo <repo>] [--no-fork]`. It picks the next eligible
    task (open, not already claimed or in progress) and prepares its workspace, printing a line:
-   `HEE_LEE_OSS_NEXT taskId=<id> repo=<owner/name> workspace=<path> output=<dest>`.
+   `HEE_LEE_OSS_NEXT v=1 taskId=<id> repo=<owner/name> workspace=<path> output=<dest> runId=<id>`.
    - If it prints "no more eligible tasks", **stop** — the queue is drained.
    - If it reports the session cap is reached, **stop** gracefully.
 2. **Do the deed:** read `<workspace>/.hee-lee-oss/TASK.md` and `.hee-lee-oss/CONTEXT.md` fully. Produce the
