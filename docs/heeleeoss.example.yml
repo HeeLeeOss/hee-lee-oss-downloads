@@ -31,6 +31,17 @@ license: MIT
 riskTier: low
 # expertReview: true
 
+# Optional: opt this project into the AI-run lifecycle. Default human (today's behaviour). With ai-full the
+# license must be one of MIT, CC0-1.0, CC-BY-4.0, Unlicense; riskTier must be low or medium. The review
+# policy below is recorded now; the reviews it names arrive in later releases. See docs/rulebook.md in the
+# Hee-Lee Oss repository.
+# lifecycle: ai-full
+# reviewPolicy:
+#   vendors: 2                  # model vendors that must approve each stage (1-3; default 2)
+#   evaluators: []              # deliverable evaluators to run (ids; registry lands with the evaluator framework)
+#   humanCheckpoints: [ship]    # stages that wait for a person: spec plan refine build verify review merge ship
+#                               # default [ship]; [] is allowed only at riskTier low
+
 # Optional: where source material comes from and how its licensing was verified.
 # provenance: Public council budget exports, Open Government Licence v3.
 # contact: maintainers@example.test
