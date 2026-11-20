@@ -20,13 +20,13 @@ Interpret the user's arguments as `[count] [project]` — both optional:
 
 Unattended runs execute the agent and the repository's checks inside a Docker Sandboxes microVM. Once per machine:
 
-1. Install `sbx` (0.48.0 or newer).
+1. Install `sbx` (0.54.0 or newer).
 2. `sbx policy init deny-all`
 3. `sbx run --name hlo-login -- auth login`, then `sbx rm -f hlo-login`
 4. `hee-lee-oss sandbox doctor` — it must report ready.
 
 Without this, ignite ends the run with `sandbox-refused`. `sandbox doctor` reports a slug for the
-first check that fails: `no-provider` (`sbx` not installed), `old-provider` (older than 0.48.0),
+first check that fails: `no-provider` (`sbx` not installed), `old-provider` (older than 0.54.0),
 `daemon-down` (the provider did not answer), `policy-not-deny-all` (the global network policy is not
 deny-all), `github-secret` (a global github secret is configured), `env-secret` (an exported
 `GH_TOKEN` or API key must be unset, then re-run), `no-agent-login` (the one-time login above is

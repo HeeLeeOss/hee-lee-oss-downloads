@@ -1,0 +1,23 @@
+formal-proof fixtures
+
+Every file under this directory was written for this repository, by hand, and is under the repository's
+licence. Nothing here is copied from another project.
+
+Three trees, each a minimal Lake package (lean-toolchain, lakefile.toml, one proof file under Proofs/):
+
+  checks/  a theorem whose proof is correct
+  fails/   a theorem whose proof is wrong
+  sorry/   a theorem whose proof is the sorry placeholder
+
+Each tree's outcomes.json gives the exit code of each step the formal-proof plan runs on it.
+
+STATUS: EXPECTED, NOT YET RECORDED. No exit code in these files was observed. No prover has run on any of
+these trees on any machine: the verify image does not exist yet (Q23). Each number is what the pinned
+tools are expected to return, from their documented behaviour: a correct proof checks (0), a wrong proof
+is an elaboration error (1), and a sorry is a warning, not an error (0). The files hold no tool output,
+because none was captured.
+
+When the owner runs the plan on the real verify image, each outcomes.json is replaced by the observed
+exit codes, its "status" is changed to "recorded", and this file says on which date, with which image
+digest and which tool versions. Until then, a test that reads these files tests the verdict rules on
+the expected codes; it does not show what the tools do.

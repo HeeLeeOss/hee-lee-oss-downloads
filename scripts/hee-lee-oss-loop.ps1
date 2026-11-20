@@ -19,7 +19,8 @@
   Registry agent id to build with (default: claude-code). Run `hee-lee-oss agents` to list what's
   installed/registered. Examples: claude-code, gemini-cli, codex, aider, cursor-agent.
 .PARAMETER Project
-  Pin to one project repo slug (Hee-Lee-Oss-Projects/<slug>) instead of auto-rotating.
+  Pin to one project slug instead of auto-rotating. It is passed to `next --project`, and the CLI
+  names the projects organisation.
 .PARAMETER NoFork
   Clone the target repo directly instead of forking (only if you have push access).
 .PARAMETER DryRun
@@ -157,7 +158,7 @@ for ($i = 1; $i -le $Count; $i++) {
     }
 
     $nextArgs = @('next', '--lane', $Lane)
-    if ($Project) { $nextArgs += @('--repo', "Hee-Lee-Oss-Projects/$Project") }
+    if ($Project) { $nextArgs += @('--project', $Project) }
     if ($NoFork) { $nextArgs += '--no-fork' }
     $out = (Invoke-HeeLeeOss @nextArgs 2>&1 | Out-String)
     $nextRead = $null

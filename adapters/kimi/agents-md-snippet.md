@@ -34,8 +34,10 @@ measured as **outcomes delivered to real beneficiaries**, not tasks merged.
 
 - The agent-neutral core (`packages/cli`, `packages/core`, `packages/schema`) must contain no
   vendor/agent-specific logic. Anything tool-specific lives in `adapters/`.
-- The CLI never invokes or authenticates a coding agent and never runs headless. It prepares a
-  task workspace and opens PRs; the human runs their agent. (Donated lane.)
+- The CLI never invokes or authenticates a coding agent. It prepares a task workspace and opens
+  PRs; on the donated lane a person runs their agent. The one path that calls the CLI with `--unattended` is `ignite` (a
+  script, not the CLI): its build agents run only inside a microVM sandbox, its reviewer and
+  verifier agents run on the host with nobody present.
 - The funded lane runs only via `packages/runner` on an API key, always with a hard per-task
   budget cap. It must never exceed the task's escrow.
 - Never write secrets, tokens, or API keys into logs, receipts, or committed files.

@@ -195,7 +195,7 @@ while [ "$i" -le "$COUNT" ]; do
   fi
 
   next_args=(next --lane "$LANE")
-  [ -n "$PROJECT" ] && next_args+=(--repo "Hee-Lee-Oss-Projects/$PROJECT")
+  [ -n "$PROJECT" ] && next_args+=(--project "$PROJECT")
   [ "$NO_FORK" -eq 1 ] && next_args+=(--no-fork)
   out="$("$HLO" "${next_args[@]}" 2>&1)"
 

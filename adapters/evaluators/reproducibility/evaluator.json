@@ -1,0 +1,95 @@
+{
+  "v": 1,
+  "id": "reproducibility",
+  "where": "sandbox",
+  "appliesTo": ["pr", "dataset", "document", "translation"],
+  "params": [
+    { "name": "environment", "kind": "enum", "values": ["pip-hashes"], "required": true },
+    { "name": "lockfile", "kind": "path", "required": true },
+    { "name": "command", "kind": "command", "required": true },
+    { "name": "outputs", "kind": "paths", "required": true },
+    { "name": "benign", "kind": "paths", "required": false },
+    { "name": "seed", "kind": "int", "required": false }
+  ],
+  "tools": [
+    {
+      "name": "python",
+      "path": "/opt/hlo/python/bin/python3",
+      "probe": ["/opt/hlo/python/bin/python3", "--version"],
+      "versionPattern": "^Python ([0-9]+\\.[0-9]+\\.[0-9]+)$",
+      "pinned": "3.15.2"
+    },
+    {
+      "name": "pip",
+      "path": "/opt/hlo/python/bin/pip3",
+      "probe": ["/opt/hlo/python/bin/pip3", "--version"],
+      "versionPattern": "^pip ([0-9][0-9.]*) from [^ ]+ \\(python [0-9][0-9.]*\\)$",
+      "pinned": "26.3"
+    },
+    {
+      "name": "sha256sum",
+      "path": "/usr/bin/sha256sum",
+      "probe": ["/usr/bin/sha256sum", "--version"],
+      "versionPattern": "^sha256sum \\(GNU coreutils\\) ([0-9]+\\.[0-9]+)$",
+      "pinned": "9.7"
+    },
+    {
+      "name": "stat",
+      "path": "/usr/bin/stat",
+      "probe": ["/usr/bin/stat", "--version"],
+      "versionPattern": "^stat \\(GNU coreutils\\) ([0-9]+\\.[0-9]+)$",
+      "pinned": "9.7"
+    }
+  ],
+  "leaveOut": { "params": ["outputs"] },
+  "env": {
+    "PYTHONHASHSEED": "{seed}",
+    "HLO_SEED": "{seed}",
+    "TZ": "UTC",
+    "LC_ALL": "C.UTF-8",
+    "SOURCE_DATE_EPOCH": "0"
+  },
+  "environments": {
+    "pip-hashes": {
+      "ecosystem": "pip",
+      "lockfileLine": "^[A-Za-z0-9][A-Za-z0-9._-]*(\\[[A-Za-z0-9._,-]+\\])?==[A-Za-z0-9][A-Za-z0-9.!+_-]*( --hash=sha256:[0-9a-f]{64})+$",
+      "steps": [
+        {
+          "name": "venv",
+          "kind": "argv",
+          "tool": "python",
+          "args": ["-m", "venv", "--without-pip", "/tmp/hlo-venv"],
+          "user": "deed",
+          "role": "environment",
+          "timeoutSec": 300,
+          "maxOutputBytes": 1048576
+        },
+        {
+          "name": "install",
+          "kind": "argv",
+          "tool": "pip",
+          "args": [
+            "--python", "/tmp/hlo-venv/bin/python3",
+            "--isolated", "--disable-pip-version-check", "--no-input",
+            "install", "--require-hashes", "--no-deps", "--only-binary=:all:", "--no-cache-dir",
+            "--index-url", "https://pypi.org/simple/",
+            "-r", "{lockfile}"
+          ],
+          "user": "deed",
+          "role": "environment",
+          "timeoutSec": 1800,
+          "maxOutputBytes": 1048576
+        }
+      ]
+    }
+  },
+  "steps": [
+    { "name": "probe-python", "kind": "probe", "tool": "python", "user": "tool", "role": "probe" },
+    { "name": "probe-pip", "kind": "probe", "tool": "pip", "user": "tool", "role": "probe" },
+    { "name": "probe-sha256sum", "kind": "probe", "tool": "sha256sum", "user": "tool", "role": "probe" },
+    { "name": "probe-stat", "kind": "probe", "tool": "stat", "user": "tool", "role": "probe" },
+    { "name": "command", "kind": "task-command", "user": "deed", "role": "command", "timeoutSec": 3600, "maxOutputBytes": 1048576 },
+    { "name": "file-type", "kind": "file-type", "tool": "stat", "args": ["--format=%f:%n"], "user": "tool", "role": "file-type", "timeoutSec": 120, "maxOutputBytes": 1048576 },
+    { "name": "digest", "kind": "digest", "tool": "sha256sum", "user": "tool", "role": "digest", "timeoutSec": 120, "maxOutputBytes": 1048576 }
+  ]
+}

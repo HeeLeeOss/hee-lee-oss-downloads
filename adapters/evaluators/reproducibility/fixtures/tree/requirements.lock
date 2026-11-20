@@ -1,0 +1,4 @@
+# Fixture lockfile in pip's hash-checking form. The package name is a placeholder that is never installed:
+# no test installs anything. A real lockfile pins every package with == and at least one --hash.
+hlo-fixture-placeholder==1.0.0 \
+    --hash=sha256:0000000000000000000000000000000000000000000000000000000000000000

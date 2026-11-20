@@ -1,0 +1,344 @@
+{
+  "note": "Injected outcomes for the reproducibility evaluator. Nothing here was produced by running a tool: each case is the digest step output a test hands to evaluate record. Hashes are sha256 of the files under tree/ as committed (LF line endings). Each case also gives the file-type step's output (the octal file mode of ./out and of each output, in lower-case hex, then a colon and the path); it defaults to every output a regular file.",
+  "committed": {
+    "out/counts.csv": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d",
+    "out/run-info.txt": "bae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350",
+    "requirements.lock": "dbe01abaab15b127b3d387bc411b23d53e4ecc1d5b9b7c4da80b503cc20b2520"
+  },
+  "parameters": {
+    "environment": "pip-hashes",
+    "lockfile": "requirements.lock",
+    "command": "/tmp/hlo-venv/bin/python3 pipeline.py",
+    "outputs": [
+      "out/counts.csv",
+      "out/run-info.txt"
+    ],
+    "benign": [
+      "out/run-info.txt"
+    ],
+    "seed": 7
+  },
+  "cases": [
+    {
+      "name": "all-match",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "pass",
+      "reason": ""
+    },
+    {
+      "name": "non-benign-differs",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "1170c8939638387ed45a0d39fa66b9cf4302208f2192e7d2ffefb1b9e2a620af  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "output-differs"
+    },
+    {
+      "name": "only-benign-differs",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\na04edf8cb3a96168f541a0a155b08504efd21d2517148141c40f2a59dab3ea11  ./out/run-info.txt\n",
+      "verdict": "advisory",
+      "reason": "benign-differs"
+    },
+    {
+      "name": "both-differ",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "1170c8939638387ed45a0d39fa66b9cf4302208f2192e7d2ffefb1b9e2a620af  ./out/counts.csv\na04edf8cb3a96168f541a0a155b08504efd21d2517148141c40f2a59dab3ea11  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "output-differs"
+    },
+    {
+      "name": "benign-output-missing",
+      "exitCode": 1,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nsha256sum: ./out/run-info.txt: No such file or directory\n",
+      "verdict": "fail",
+      "reason": "output-missing"
+    },
+    {
+      "name": "output-missing",
+      "exitCode": 1,
+      "truncated": false,
+      "digest": "sha256sum: ./out/counts.csv: No such file or directory\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "output-missing"
+    },
+    {
+      "name": "two-lines-for-one-path",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nd91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "one-path-twice-other-absent",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nd91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "upper-case-hex",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "D91532662a1ee8Dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "trailing-space",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv \nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "tab-for-two-spaces",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d\t./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "crlf",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\r\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\r\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "undeclared-path",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n1170c8939638387ed45a0d39fa66b9cf4302208f2192e7d2ffefb1b9e2a620af  ./out/extra.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "undeclared-path-instead",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/other.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "out-of-order",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "bae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\nd91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "no-final-newline",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "byte-order-mark",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "\ufeffd91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "one-space",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "path-without-dot-slash",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "escaped-name",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "\\d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "short-hex",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "empty",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "truncated",
+      "exitCode": 0,
+      "truncated": true,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "truncated-mid-line",
+      "exitCode": 0,
+      "truncated": true,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "output-is-a-link-out-of-the-tree",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\na1ff:./out/counts.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "benign-output-is-a-link",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/counts.csv\na1ff:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "output-directory-is-a-link",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "a1ff:./out\n81a4:./out/counts.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "output-is-a-directory",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n41ed:./out/counts.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "output-is-a-device",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n21b6:./out/counts.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "output-is-a-fifo",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/counts.csv\n11a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "file-type-upper-case-hex",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81A4:./out/counts.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "file-type-line-missing",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/counts.csv\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "file-type-out-of-order",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "81a4:./out/counts.csv\n41ed:./out\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "file-type-crlf",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\r\n81a4:./out/counts.csv\r\n81a4:./out/run-info.txt\r\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "file-type-truncated",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/counts.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output",
+      "fileTypeTruncated": true
+    },
+    {
+      "name": "file-type-output-absent",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/counts.csv\nstat: cannot statx './out/run-info.txt': No such file or directory\n",
+      "verdict": "fail",
+      "reason": "output-missing",
+      "fileTypeExitCode": 1
+    },
+    {
+      "name": "file-type-wrong-path",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/other.csv\n81a4:./out/run-info.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    },
+    {
+      "name": "file-type-extra-line",
+      "exitCode": 0,
+      "truncated": false,
+      "digest": "d91532662a1ee8dc2ae18ca1a4dcf557f676941a2a35f16b6e2ddc5bb37d795d  ./out/counts.csv\nbae1ab4283cf37230757dd8d0f217ad825fc9cb082d901ea363b45b7f65fa350  ./out/run-info.txt\n",
+      "fileType": "41ed:./out\n81a4:./out/counts.csv\n81a4:./out/run-info.txt\n81a4:./out/extra.txt\n",
+      "verdict": "fail",
+      "reason": "malformed-output"
+    }
+  ],
+  "regularFileType": "41ed:./out\n81a4:./out/counts.csv\n81a4:./out/run-info.txt\n"
+}
