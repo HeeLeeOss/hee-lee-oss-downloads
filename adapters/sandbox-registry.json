@@ -5,7 +5,7 @@
       "id": "docker-sbx",
       "isolation": "microvm",
       "command": "sbx",
-      "minVersion": "0.48.0",
+      "minVersion": "0.54.0",
       "envFlag": "-e",
       "templates": {
         "version":   ["version"],
@@ -19,7 +19,55 @@
         "stop":      ["stop", "{name}"],
         "remove":    ["rm", "-f", "{name}"]
       },
-      "clone": { "fetchUrl": "git://127.0.0.1:{port}/{repo}" }
+      "clone": { "fetchUrl": "git://127.0.0.1:{port}/{repo}" },
+      "verify": {
+        "image":    "hlo-verify@sha256:633604f30c16f61ba72b133bd267883638412dc980ccc7c5c0a38d7ee59d8b52",
+        "toolUser": "hlo-tool",
+        "deedUser": "hlo-deed",
+        "create":   ["create", "--name", "{name}", "--no-progress", "--pull", "never", "-t", "{image}", "shell"],
+        "exec":     ["exec", "-i", "-u", "{user}", "{env}", "{name}", "{argv}"],
+        "endDeed": {
+          "tools": [
+            {
+              "name": "kill",
+              "path": "/usr/bin/kill",
+              "probe": ["/usr/bin/kill", "--version"],
+              "versionPattern": "^kill from procps-ng ([0-9]+\\.[0-9]+\\.[0-9]+)$",
+              "pinned": "4.0.4"
+            },
+            {
+              "name": "pgrep",
+              "path": "/usr/bin/pgrep",
+              "probe": ["/usr/bin/pgrep", "--version"],
+              "versionPattern": "^pgrep from procps-ng ([0-9]+\\.[0-9]+\\.[0-9]+)$",
+              "pinned": "4.0.4"
+            }
+          ],
+          "kill":  ["/usr/bin/kill", "-KILL", "--", "-1"],
+          "check": ["/usr/bin/pgrep", "--count", "--uid", "{deedUser}"]
+        },
+        "hostSettings": {
+          "read": ["settings", "ls", "--format", "json"],
+          "off":  ["browser.enabled", "clipboard.textCopy"]
+        },
+        "kit": {
+          "ref":     "docker.io/sbx/shell@sha256:89ed5d63def6bfb2373d408e3ab6ad55aa5c010f884a182a78299fcf85ea42d1",
+          "setting": "kit.shortcuts.shell"
+        },
+        "credentialHosts": {
+          "anthropic":  ["api.anthropic.com", "console.anthropic.com", "claude.ai", "mcp-proxy.anthropic.com"],
+          "cursor":     ["api2.cursor.sh", "api3.cursor.sh", "repo42.cursor.sh", "cursor.com"],
+          "droid":      ["api.factory.ai", "app.factory.ai", "relay.factory.ai"],
+          "github":     ["github.com", "api.github.com", "*.githubusercontent.com", "gist.github.com", "copilot.github.com", "api.githubcopilot.com"],
+          "google":     ["generativelanguage.googleapis.com", "oauth2.googleapis.com", "aiplatform.googleapis.com", "vertexai.googleapis.com"],
+          "groq":       ["api.groq.com"],
+          "mistral":    ["api.mistral.ai"],
+          "nebius":     ["api.studio.nebius.com", "api.tokenfactory.nebius.com"],
+          "openai":     ["api.openai.com", "openai.com", "chatgpt.com", "www.chatgpt.com"],
+          "openrouter": ["openrouter.ai"],
+          "xai":        ["api.x.ai"]
+        }
+      }
     }
   ]
 }

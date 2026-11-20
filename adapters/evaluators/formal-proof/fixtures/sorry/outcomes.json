@@ -1,0 +1,7 @@
+{
+  "status": "expected, not yet recorded",
+  "steps": [
+    { "step": "build-lean", "exitCode": 0 },
+    { "step": "check-lean", "unit": "Proofs/Basic.lean", "exitCode": 0 }
+  ]
+}

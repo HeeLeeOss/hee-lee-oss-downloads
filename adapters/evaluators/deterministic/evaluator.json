@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "id": "deterministic",
+  "where": "host",
+  "appliesTo": ["pr", "dataset", "document", "translation"],
+  "params": [{ "name": "checks", "kind": "checks", "required": true }],
+  "tools": [],
+  "steps": []
+}

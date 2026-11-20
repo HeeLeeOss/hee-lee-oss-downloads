@@ -1,0 +1,6 @@
+name = "fixture"
+defaultTargets = ["Proofs"]
+
+[[lean_lib]]
+name = "Proofs"
+roots = ["Proofs.Basic"]

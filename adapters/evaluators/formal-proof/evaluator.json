@@ -1,0 +1,76 @@
+{
+  "v": 1,
+  "id": "formal-proof",
+  "where": "sandbox",
+  "appliesTo": ["pr", "dataset", "document", "translation"],
+  "params": [],
+  "tools": [
+    {
+      "name": "lean",
+      "path": "/opt/hlo/lean/bin/lean",
+      "probe": ["/opt/hlo/lean/bin/lean", "--version"],
+      "versionPattern": "^Lean \\(version ([0-9]+\\.[0-9]+\\.[0-9]+), [^ ,]+, commit [0-9a-f]{40}, Release\\)$",
+      "pinned": "4.35.0"
+    },
+    {
+      "name": "lake",
+      "path": "/opt/hlo/lean/bin/lake",
+      "probe": ["/opt/hlo/lean/bin/lake", "--version"],
+      "versionPattern": "^Lake version [0-9]+\\.[0-9]+\\.[0-9]+-src\\+[0-9a-f]{7} \\(Lean version ([0-9]+\\.[0-9]+\\.[0-9]+)\\)$",
+      "pinned": "4.35.0"
+    },
+    {
+      "name": "rocq",
+      "path": "/opt/hlo/rocq/bin/rocq",
+      "probe": ["/opt/hlo/rocq/bin/rocq", "--version"],
+      "versionPattern": "^The Rocq Prover, version ([0-9]+\\.[0-9]+\\.[0-9]+)$",
+      "pinned": "9.3.0"
+    }
+  ],
+  "pinnedFiles": [{ "path": "lean-toolchain", "value": "leanprover/lean4:v4.35.0", "when": { "unit": "lean" } }],
+  "units": [
+    { "name": "lean", "under": "{output}", "extensions": [".lean"], "requiresAudit": true },
+    { "name": "rocq", "under": "{output}", "extensions": [".v"], "requiresAudit": true }
+  ],
+  "leaveOut": {
+    "extensions": [".olean", ".ilean", ".ir", ".sig", ".private", ".server", ".trace", ".hash", ".vo", ".vos", ".vok", ".glob"]
+  },
+  "steps": [
+    { "name": "probe-lean", "kind": "probe", "tool": "lean", "user": "tool", "role": "probe" },
+    { "name": "probe-lake", "kind": "probe", "tool": "lake", "user": "tool", "role": "probe" },
+    { "name": "probe-rocq", "kind": "probe", "tool": "rocq", "user": "tool", "role": "probe" },
+    {
+      "name": "build-lean",
+      "kind": "argv",
+      "tool": "lake",
+      "args": ["build"],
+      "user": "deed",
+      "role": "build",
+      "when": { "unit": "lean" },
+      "timeoutSec": 1800,
+      "maxOutputBytes": 1048576
+    },
+    {
+      "name": "check-lean",
+      "kind": "argv",
+      "tool": "lake",
+      "args": ["lean", "{file}"],
+      "user": "deed",
+      "role": "check",
+      "forEach": "lean",
+      "timeoutSec": 600,
+      "maxOutputBytes": 1048576
+    },
+    {
+      "name": "check-rocq",
+      "kind": "argv",
+      "tool": "rocq",
+      "args": ["compile", "{file}"],
+      "user": "deed",
+      "role": "check",
+      "forEach": "rocq",
+      "timeoutSec": 600,
+      "maxOutputBytes": 1048576
+    }
+  ]
+}
